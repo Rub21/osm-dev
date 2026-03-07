@@ -1,0 +1,7 @@
+development:
+  adapter: postgresql
+  host: db
+  database: openstreetmap
+  username: postgres
+  password: openstreetmap
+  encoding: utf8

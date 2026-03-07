@@ -1,0 +1,78 @@
+services:
+  web:
+    container_name: web
+    build:
+      context: ./../openstreetmap-website
+    environment:
+      PIDFILE: /tmp/pids/server.pid
+    volumes:
+      - ./../openstreetmap-website:/app
+      - ./start.sh:/docker/start.sh
+      - ./config/settings.local.yml:/app/config/settings.local.yml
+      - ./config/database.yml:/app/config/database.yml
+      - ./config/storage.yml:/app/config/storage.yml
+      - /app/node_modules/
+      - web-tmp:/app/tmp
+      - web-storage:/app/storage
+    networks:
+      - local_network
+    tmpfs:
+      /tmp/pids/
+    ports:
+      - "3000:3000"
+    stdin_open: true
+    tty: true
+    command: /docker/start.sh
+    depends_on:
+      - db
+      - memcached
+    env_file:
+      - .env
+
+  memcached:
+    container_name: memcached
+    image: memcached:latest
+    ports:
+      - '11211:11211'
+    networks:
+      - local_network
+
+  # cgimap:
+  #   image: ghcr.io/openstreetmap/cgimap:latest
+  #   environment:
+  #     CGIMAP_DATABASE: openstreetmap
+  #     CGIMAP_HOST: db
+  #     CGIMAP_USERNAME: postgres
+  #     CGIMAP_PASSWORD: openstreetmap
+  #   depends_on:
+  #     - db
+  #   networks:
+  #     - local_network
+  #   ports:
+  #     - "8000:8000"
+
+  db:
+    container_name: db
+    build:
+      context: ./../openstreetmap-website
+      dockerfile: docker/postgres/Dockerfile
+    ports:
+      - "54321:5432"
+    env_file:
+      - .env
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    networks:
+      - local_network
+
+volumes:
+  web-tmp:
+  web-storage:
+  db-data:
+    driver: local
+    name: pg_data
+
+networks:
+  local_network:
+    driver: bridge
+    
