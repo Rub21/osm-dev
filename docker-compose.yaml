@@ -68,9 +68,7 @@ services:
 
   gps-db:
     container_name: gps-db
-    build:
-      context: ./../openstreetmap-website
-      dockerfile: docker/postgres/Dockerfile
+    image: postgis/postgis:17-3.5
     ports:
       - "54322:5432"
     environment:

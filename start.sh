@@ -36,6 +36,7 @@ echo $RAILS_CREDENTIALS_YML_ENC > config/credentials.yml.enc
 echo $RAILS_MASTER_KEY > config/master.key
 chmod 600 config/credentials.yml.enc config/master.key
 
+bundle install
 
 restore_db
 bundle exec rails db:migrate --trace
