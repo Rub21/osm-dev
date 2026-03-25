@@ -25,6 +25,7 @@ services:
     command: /docker/start.sh
     depends_on:
       - db
+      - gps-db
       - memcached
     env_file:
       - .env
@@ -65,12 +66,31 @@ services:
     networks:
       - local_network
 
+  gps-db:
+    container_name: gps-db
+    build:
+      context: ./../openstreetmap-website
+      dockerfile: docker/postgres/Dockerfile
+    ports:
+      - "54322:5432"
+    environment:
+      POSTGRES_DB: openstreetmap_gps
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: openstreetmap
+    volumes:
+      - gps-db-data:/var/lib/postgresql/data
+    networks:
+      - local_network
+
 volumes:
   web-tmp:
   web-storage:
   db-data:
     driver: local
     name: pg_data
+  gps-db-data:
+    driver: local
+    name: gps_pg_data
 
 networks:
   local_network:
