@@ -1,7 +1,16 @@
 development:
-  adapter: postgresql
-  host: db
-  database: openstreetmap
-  username: postgres
-  password: openstreetmap
-  encoding: utf8
+  primary:
+    adapter: postgresql
+    host: db
+    database: openstreetmap
+    username: postgres
+    password: openstreetmap
+    encoding: utf8
+  gps:
+    adapter: postgresql
+    host: gps-db
+    database: openstreetmap_gps
+    username: postgres
+    password: openstreetmap
+    encoding: utf8
+    migrations_paths: db/gps_migrate
