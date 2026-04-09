@@ -41,4 +41,11 @@ restore_db
 bundle exec rails db:migrate --trace
 setup_admin
 bundle exec rails jobs:work &
+
+# Auto-activate pending users (skip email confirmation in dev)
+while true; do
+  bundle exec rails runner "User.where(status: 'pending').find_each(&:activate!)" 2>/dev/null
+  sleep 10
+done &
+
 bundle exec rails server -b 0.0.0.0 -p 3000
