@@ -38,3 +38,11 @@ The app will be available at http://localhost:3000
 - `config/storage.yml` - Storage config
 - `.env` - Environment variables
 - `start.sh` - Startup script (restores DB, runs migrations, starts server)
+
+## HTTPS con Certbot
+
+Para habilitar HTTPS con un certificado SSL gratuito de Let's Encrypt:
+
+```bash
+docker exec proxy sh -c 'apk add certbot certbot-nginx && certbot --nginx -d openstreetmap.204-168-242-139.nip.io --non-interactive --agree-tos -m rub2106@gmail.com'
+```
