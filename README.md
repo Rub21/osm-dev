@@ -22,8 +22,11 @@ The structure should look like:
 
 ```bash
 cd osm-dev
-docker compose build
-docker compose up
+docker compose up --build
+
+# docker compose down
+# docker volume rm pg_data 
+# docker volume rm  gps_pg_data
 ```
 
 The app will be available at http://localhost:3000
