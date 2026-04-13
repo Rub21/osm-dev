@@ -94,7 +94,7 @@ services:
 
   gps-db:
     container_name: gps-db
-    image: postgis/postgis:17-3.5
+    image: postgres:15
     ports:
       - "54322:5432"
     environment:
