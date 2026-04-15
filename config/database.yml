@@ -13,4 +13,5 @@ development:
     username: postgres
     password: openstreetmap
     encoding: utf8
+    connect_timeout: 3
     migrations_paths: db/gps_migrate
