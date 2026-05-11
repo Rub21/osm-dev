@@ -1,0 +1,46 @@
+services:
+  web:
+    depends_on:
+      - gps-db
+    environment:
+      GPS_ENABLED: "1"
+
+  gps-db:
+    container_name: gps-db
+    image: postgres:15
+    ports:
+      - "54322:5432"
+    environment:
+      POSTGRES_DB: openstreetmap_gps
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: openstreetmap
+    volumes:
+      - gps-db-data:/var/lib/postgresql/data
+    networks:
+      - local_network
+
+  pgadmin:
+    container_name: pgadmin
+    image: dpage/pgadmin4:latest
+    ports:
+      - "5050:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@osm.org
+      PGADMIN_DEFAULT_PASSWORD: admin
+      PGADMIN_CONFIG_SERVER_MODE: "False"
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: "False"
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
+      - ./pgadmin-servers.json:/pgadmin4/servers.json:ro
+      - ./pgpass:/pgpass:ro
+    networks:
+      - local_network
+    depends_on:
+      - db
+      - gps-db
+
+volumes:
+  gps-db-data:
+    driver: local
+    name: gps_pg_data
+  pgadmin-data:
