@@ -10,6 +10,7 @@ services:
     volumes:
       - ./../openstreetmap-website:/app
       - ./start.sh:/docker/start.sh
+      - ./scripts:/docker/scripts
       - ./config/settings.local.yml:/app/config/settings.local.yml
       - ./config/database.yml:/app/config/database.yml
       - ./config/storage.yml:/app/config/storage.yml

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.0" creator="osm-dev test script" xmlns="http://www.topografix.com/GPX/1/0">
+  <trk>
+    <name>test-trace</name>
+    <trkseg>
+      <trkpt lat="40.0000" lon="-74.0000">
+        <ele>10.0</ele>
+        <time>2026-05-11T10:00:00Z</time>
+      </trkpt>
+      <trkpt lat="40.0010" lon="-74.0010">
+        <ele>11.0</ele>
+        <time>2026-05-11T10:00:01Z</time>
+      </trkpt>
+      <trkpt lat="40.0020" lon="-74.0020">
+        <ele>12.0</ele>
+        <time>2026-05-11T10:00:02Z</time>
+      </trkpt>
+    </trkseg>
+  </trk>
+</gpx>
