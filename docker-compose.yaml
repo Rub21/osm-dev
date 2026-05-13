@@ -1,12 +1,14 @@
 services:
   web:
+    container_name: ${DOCKER_NAME_PREFIX:-osmdev}-web
+    image: ${DOCKER_NAME_PREFIX:-osmdev}-web
     build:
-      context: ./../openstreetmap-website
+      context: ${BASE_REPO:-./../openstreetmap-website}
     environment:
       PIDFILE: /tmp/pids/server.pid
-      INSTANCE_HOST: ${INSTANCE_HOST:-localhost}
+      DOMAIN_NAME: ${DOMAIN_NAME:-localhost}
     volumes:
-      - ./../openstreetmap-website:/app
+      - ${BASE_REPO:-./../openstreetmap-website}:/app
       - ./start.sh:/docker/start.sh
       - ./scripts:/docker/scripts
       - ./config/settings.local.yml:/app/config/settings.local.yml
@@ -31,19 +33,22 @@ services:
     labels:
       - traefik.enable=true
       - traefik.docker.network=osm-proxy
-      - traefik.http.routers.${INSTANCE_NAME:-osmdev}.rule=Host(`${INSTANCE_HOST:-localhost}`)
-      - traefik.http.routers.${INSTANCE_NAME:-osmdev}.entrypoints=websecure
-      - traefik.http.routers.${INSTANCE_NAME:-osmdev}.tls.certresolver=le
-      - traefik.http.services.${INSTANCE_NAME:-osmdev}.loadbalancer.server.port=3000
+      - traefik.http.routers.${DOCKER_NAME_PREFIX:-osmdev}.rule=Host(`${DOMAIN_NAME:-localhost}`)
+      - traefik.http.routers.${DOCKER_NAME_PREFIX:-osmdev}.entrypoints=websecure
+      - traefik.http.routers.${DOCKER_NAME_PREFIX:-osmdev}.tls.certresolver=le
+      - traefik.http.services.${DOCKER_NAME_PREFIX:-osmdev}.loadbalancer.server.port=3000
 
   memcached:
+    container_name: ${DOCKER_NAME_PREFIX:-osmdev}-memcached
     image: memcached:latest
     networks:
       - local_network
 
   db:
+    container_name: ${DOCKER_NAME_PREFIX:-osmdev}-db
+    image: ${DOCKER_NAME_PREFIX:-osmdev}-db 
     build:
-      context: ./../openstreetmap-website
+      context: ${BASE_REPO:-./../openstreetmap-website}
       dockerfile: docker/postgres/Dockerfile
     env_file:
       - .env

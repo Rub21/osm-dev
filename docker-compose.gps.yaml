@@ -36,10 +36,10 @@ services:
     labels:
       - traefik.enable=true
       - traefik.docker.network=osm-proxy
-      - traefik.http.routers.${INSTANCE_NAME:-osmdev}-pgadmin.rule=Host(`pgadmin-${INSTANCE_HOST:-localhost}`)
-      - traefik.http.routers.${INSTANCE_NAME:-osmdev}-pgadmin.entrypoints=websecure
-      - traefik.http.routers.${INSTANCE_NAME:-osmdev}-pgadmin.tls.certresolver=le
-      - traefik.http.services.${INSTANCE_NAME:-osmdev}-pgadmin.loadbalancer.server.port=80
+      - traefik.http.routers.${DOCKER_NAME_PREFIX:-osmdev}-pgadmin.rule=Host(`pgadmin-${DOMAIN_NAME:-localhost}`)
+      - traefik.http.routers.${DOCKER_NAME_PREFIX:-osmdev}-pgadmin.entrypoints=websecure
+      - traefik.http.routers.${DOCKER_NAME_PREFIX:-osmdev}-pgadmin.tls.certresolver=le
+      - traefik.http.services.${DOCKER_NAME_PREFIX:-osmdev}-pgadmin.loadbalancer.server.port=80
 
 volumes:
   gps-db-data:

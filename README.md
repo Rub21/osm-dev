@@ -1,96 +1,71 @@
 # OSM Dev
 
-Local development setup for openstreetmap-website. Supports a single instance for local work, or many parallel instances (one per PR/branch) routed via a shared HTTPS reverse proxy.
+Run multiple openstreetmap-website branches in parallel, each on its own subdomain, behind a shared Traefik proxy with auto HTTPS.
 
-## Single instance (default)
-
-```bash
-cd osm-dev
-docker compose build
-docker compose up
-```
-
-Without `.env.instance`, the Traefik labels fall back to `localhost`. If no shared proxy is running, ignore the labels and add `ports: [3000:3000]` to the `web` service for direct access, then visit http://localhost:3000.
-
-## Multiple instances (one per PR/branch)
-
-### One-time: start the shared proxy
-
-The shared proxy lives at `./proxy/`. It runs Traefik on ports 80/443 and obtains HTTPS certs from Let's Encrypt.
+## One-time: start the shared proxy
 
 ```bash
-cd proxy
+cd /apps/osm-dev/proxy
 docker compose up -d
 ```
 
-This creates a docker network named `osm-proxy` that all instances join.
+Traefik listens on 80/443, issues Let's Encrypt certs, and creates the `osm-proxy` network all instances join.
 
-### Per instance
-
-Use the helper script:
+## Deploy an instance
 
 ```bash
-./spawn-instance.sh db-repair pr/db-repair-branch
-./spawn-instance.sh simplify pr/visibility-simplify-branch
+cd /apps/osm-dev
+./deploy.sh <branch> [up|start|stop]
 ```
 
-This creates `../instances/<slug>/` with its own clone of `openstreetmap-website` (checked out to the given branch) and a copy of `osm-dev/` with `.env.instance` pre-filled.
-
-Then bring it up:
+Examples:
 
 ```bash
-cd ../instances/db-repair/osm-dev
-docker compose --env-file .env --env-file .env.instance up -d --build
+./deploy.sh gps_db                  # clone/pull + build + up
+./deploy.sh gps_visibility          # same, for another branch
+./deploy.sh gps_db stop             # stop containers (data preserved)
+./deploy.sh gps_db start            # restart stopped containers
 ```
 
-Resulting URLs (HTTPS, auto cert):
+What `deploy.sh` does on `up`:
 
-- https://db-repair.204-168-242-139.nip.io
-- https://simplify.204-168-242-139.nip.io
+1. Clones `openstreetmap-website` into `/apps/instances/<branch>/openstreetmap-website` (or pulls if it already exists).
+2. Derives a slug (`gps_db` → `gps-db`) and builds the public hostname `<slug>.204-168-153-175.nip.io`.
+3. Exports `COMPOSE_PROJECT_NAME`, `DOCKER_NAME_PREFIX`, `BASE_REPO`, `DOMAIN_NAME` so containers, volumes, networks, and Traefik labels are prefixed per branch.
+4. Runs `docker compose up -d --build`.
+5. Prints the resulting URLs.
 
-Each instance has isolated database, memcached, and storage volumes.
+## Per-branch compose overlays
 
-### Manual instance setup (without the helper)
-
-1. Clone openstreetmap-website checked out at the branch you want.
-2. Copy this `osm-dev/` folder next to it.
-3. In the copy, create `.env.instance` (see `.env.instance.example`):
+In `deploy.sh` there's a small `case "$BRANCH"` that adds extra compose files for branches that need them. Today:
 
 ```bash
-COMPOSE_PROJECT_NAME=osm-<slug>
-INSTANCE_NAME=<slug>
-INSTANCE_HOST=<slug>.<host-ip-with-dashes>.nip.io
+gps_db) COMPOSE_FILES="$COMPOSE_FILES -f docker-compose.gps.yaml"
 ```
 
-4. `docker compose --env-file .env --env-file .env.instance up -d --build`
+So `gps_db` also gets the gps postgres + pgadmin (routed at `https://pgadmin-<DOMAIN_NAME>`). Add new entries here as branches need them.
 
-## Configuration files
+## Layout
 
-- `config/database.yml` — Database connection
-- `config/settings.local.yml` — App settings (overrides `settings.yml`)
-- `config/storage.yml` — Storage config
-- `.env` — Shared environment variables (rails creds, oauth, etc)
-- `.env.instance` — Per-instance overrides (project name, host). Not in single-instance mode.
-- `start.sh` — Startup script (restores DB, migrations, server)
-
-## GPS overlay (gps-db + pgadmin)
-
-```bash
-docker compose -f docker-compose.yaml -f docker-compose.gps.yaml --env-file .env --env-file .env.instance up -d --build
+```
+/apps/
+├── osm-dev/
+│   ├── proxy/                              shared Traefik (start once)
+│   └── deploy.sh                           entry point
+└── instances/
+    └── <branch>/openstreetmap-website/     per-branch clone
 ```
 
-pgadmin is routed at `https://pgadmin-<INSTANCE_HOST>` via Traefik.
+## Files
 
-## Stop / clean up
-
-```bash
-docker compose --env-file .env --env-file .env.instance down          # stop, keep volumes
-docker compose --env-file .env --env-file .env.instance down -v       # stop, delete DB
-```
+- `docker-compose.yaml` — base stack (web, db, memcached). Parametrized via `${DOCKER_NAME_PREFIX}`, `${DOMAIN_NAME}`, `${BASE_REPO}`.
+- `docker-compose.gps.yaml` — overlay for branches that need pgadmin + gps-db.
+- `.env` — shared env (Rails creds, oauth, db password).
+- `deploy.sh` — entry point. The only script you need.
+- `start.sh` — container-side startup (DB restore, migrate, server boot).
 
 ## Notes
 
-- Host IP `204-168-242-139` is encoded into nip.io subdomains. If your public IP changes, update `INSTANCE_HOST` in each `.env.instance`.
-- Ports 80 and 443 must be reachable from the public internet for Let's Encrypt HTTP-01 challenges to succeed.
-- Each instance ≈ 1-2 GB RAM. Plan host capacity accordingly.
-- `config/settings.local.yml` currently hardcodes `server_url: localhost:3000`. For HTTPS instances, override per copy if you need correct absolute URLs in emails / OAuth callbacks.
+- Host IP `204.168.153.175` is encoded into nip.io subdomains. If it changes, update `NIP_DOMAIN` in `deploy.sh`.
+- Ports 80 and 443 must be reachable from the public internet for Let's Encrypt to succeed.
+- Each instance ≈ 1–2 GB RAM.

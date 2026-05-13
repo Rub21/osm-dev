@@ -5,7 +5,7 @@ Shared Traefik reverse proxy for multiple osm-dev instances. Handles HTTPS via L
 ## Start
 
 ```bash
-cd osm-dev/proxy
+cd /apps/osm-dev/proxy
 docker compose up -d
 ```
 
