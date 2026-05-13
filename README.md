@@ -1,4 +1,4 @@
-# OSM Dev
+# OSM Development Setup
 
 Run multiple openstreetmap-website branches in parallel. Each on its own HTTPS subdomain behind a shared Traefik proxy.
 
