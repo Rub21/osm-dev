@@ -13,6 +13,8 @@ if [[ -z "$BRANCH" ]]; then
   exit 1
 fi
 
+source .env
+
 export BRANCH
 export SLUG="${BRANCH//_/-}"                          # gps_db -> gps-db
 export REPO_URL="git@github.com:Rub21/openstreetmap-website.git"
@@ -20,7 +22,7 @@ export APPS_DIR="/apps/instances/$BRANCH"
 export BASE_REPO="$APPS_DIR/openstreetmap-website"
 export DOCKER_NAME_PREFIX="$SLUG"
 export COMPOSE_PROJECT_NAME="$SLUG"
-export NIP_DOMAIN="204-168-153-175.nip.io"
+export NIP_DOMAIN=$NIP_DOMAIN
 export DOMAIN_NAME="${SLUG}.${NIP_DOMAIN}"
 
 # Per-branch additional compose overlays. Add new branches here as needed.
