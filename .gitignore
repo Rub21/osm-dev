@@ -1,2 +1,3 @@
 .env
-.DS_Store
+scripts/.tokens-*.json
+scripts/.tokens.json

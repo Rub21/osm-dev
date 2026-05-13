@@ -6,6 +6,7 @@ development:
     username: postgres
     password: openstreetmap
     encoding: utf8
+<% if ENV["GPS_ENABLED"] == "1" %>
   gps:
     adapter: postgresql
     host: gps-db
@@ -13,4 +14,6 @@ development:
     username: postgres
     password: openstreetmap
     encoding: utf8
+    connect_timeout: 3
     migrations_paths: db/gps_migrate
+<% end %>

@@ -1,48 +1,48 @@
-# OSM Dev
+# OSM Development Setup
 
-Local development setup for openstreetmap-website.
+Run multiple openstreetmap-website branches in parallel. Each on its own HTTPS subdomain behind a shared Traefik proxy.
 
-## Setup
-
-1. Clone both repos in the same directory:
+## Start the proxy (once)
 
 ```bash
-git clone git@github.com:openstreetmap/openstreetmap-website.git
-git clone git@github.com:rub21/osm-dev.git
+cd /apps/osm-dev/proxy && docker compose up -d
 ```
 
-The structure should look like:
-
-```
-├── openstreetmap-website/
-└── osm-dev/
-```
-
-2. Build and run:
+## Deploy a branch
 
 ```bash
-cd osm-dev
-docker compose up --build
-
-# docker compose down
-# docker volume rm pg_data 
-# docker volume rm  gps_pg_data
+cd /apps/osm-dev
+./deploy.sh gps_db              # clone + build + up
+./deploy.sh gps_visibility      # another branch
+./deploy.sh gps_db stop         # stop (keeps data)
+./deploy.sh gps_db start        # restart stopped
 ```
 
-The app will be available at http://localhost:3000
+URL: `https://<slug>.<your-ip>.nip.io` (slug = branch with `_` → `-`).
 
-## Configuration
+## Layout
 
-- `config/database.yml` - Database connection
-- `config/settings.local.yml` - App settings (overrides `settings.yml`)
-- `config/storage.yml` - Storage config
-- `.env` - Environment variables
-- `start.sh` - Startup script (restores DB, runs migrations, starts server)
+```
+/apps/
+├── osm-dev/
+│   ├── proxy/         shared Traefik
+│   ├── deploy.sh      entry point
+│   ├── docker-compose.yaml
+│   ├── docker-compose.gps.yaml   overlay (gps-db + pgadmin)
+│   └── start.sh       container boot
+└── instances/<branch>/openstreetmap-website/   per-branch clone
+```
 
-## HTTPS con Certbot
+## Per-branch overlays
 
-Para habilitar HTTPS con un certificado SSL gratuito de Let's Encrypt:
+Add inside `deploy.sh` `case "$BRANCH"`:
 
 ```bash
-docker exec proxy sh -c 'apk add certbot certbot-nginx && certbot --nginx -d openstreetmap.204-168-242-139.nip.io --non-interactive --agree-tos -m rub2106@gmail.com'
+gps_db) COMPOSE_FILES="$COMPOSE_FILES -f docker-compose.gps.yaml" ;;
 ```
+
+## Notes
+
+- Host IP baked into nip.io. Change `NIP_DOMAIN` in `deploy.sh` if it moves.
+- Ports 80/443 must be public for Let's Encrypt.
+- Each instance ≈ 1–2 GB RAM.
