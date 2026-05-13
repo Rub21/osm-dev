@@ -6,10 +6,7 @@ services:
       GPS_ENABLED: "1"
 
   gps-db:
-    container_name: gps-db
     image: postgres:15
-    ports:
-      - "54322:5432"
     environment:
       POSTGRES_DB: openstreetmap_gps
       POSTGRES_USER: postgres
@@ -20,10 +17,7 @@ services:
       - local_network
 
   pgadmin:
-    container_name: pgadmin
     image: dpage/pgadmin4:latest
-    ports:
-      - "5050:80"
     environment:
       PGADMIN_DEFAULT_EMAIL: admin@osm.org
       PGADMIN_DEFAULT_PASSWORD: admin
@@ -35,12 +29,18 @@ services:
       - ./pgpass:/pgpass:ro
     networks:
       - local_network
+      - osm-proxy
     depends_on:
       - db
       - gps-db
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=osm-proxy
+      - traefik.http.routers.${INSTANCE_NAME:-osmdev}-pgadmin.rule=Host(`pgadmin-${INSTANCE_HOST:-localhost}`)
+      - traefik.http.routers.${INSTANCE_NAME:-osmdev}-pgadmin.entrypoints=websecure
+      - traefik.http.routers.${INSTANCE_NAME:-osmdev}-pgadmin.tls.certresolver=le
+      - traefik.http.services.${INSTANCE_NAME:-osmdev}-pgadmin.loadbalancer.server.port=80
 
 volumes:
   gps-db-data:
-    driver: local
-    name: gps_pg_data
   pgadmin-data:
