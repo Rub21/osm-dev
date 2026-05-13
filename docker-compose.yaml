@@ -1,41 +1,17 @@
 services:
-  proxy:
-    container_name: proxy
-    image: nginx:alpine
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - letsencrypt:/etc/letsencrypt
-    networks:
-      - local_network
-    depends_on:
-      - web
-    command: |
-      sh -c 'cat > /etc/nginx/conf.d/default.conf << "CONF"
-      server {
-          listen 80;
-          server_name openstreetmap.204-168-242-139.nip.io;
-          location / {
-              proxy_pass http://web:3000;
-              proxy_set_header Host $$host;
-              proxy_set_header X-Real-IP $$remote_addr;
-              proxy_set_header X-Forwarded-For $$proxy_add_x_forwarded_for;
-              proxy_set_header X-Forwarded-Proto $$scheme;
-          }
-      }
-      CONF
-      nginx -g "daemon off;"'
-
   web:
-    container_name: web
+    container_name: ${DOCKER_NAME_PREFIX:-osmdev}-web
+    image: ${DOCKER_NAME_PREFIX:-osmdev}-web
     build:
-      context: ./../openstreetmap-website
+      context: ${BASE_REPO:-./../openstreetmap-website}
     environment:
       PIDFILE: /tmp/pids/server.pid
+      DOMAIN_NAME: ${DOMAIN_NAME:-localhost}
+      INSTANCE_SLUG: ${DOCKER_NAME_PREFIX:-osmdev}
     volumes:
-      - ./../openstreetmap-website:/app
+      - ${BASE_REPO:-./../openstreetmap-website}:/app
       - ./start.sh:/docker/start.sh
+      - ./scripts:/docker/scripts
       - ./config/settings.local.yml:/app/config/settings.local.yml
       - ./config/database.yml:/app/config/database.yml
       - ./config/storage.yml:/app/config/storage.yml
@@ -44,6 +20,7 @@ services:
       - web-storage:/app/storage
     networks:
       - local_network
+      - osm-proxy
     tmpfs:
       /tmp/pids/
     stdin_open: true
@@ -51,40 +28,29 @@ services:
     command: /docker/start.sh
     depends_on:
       - db
-      - gps-db
       - memcached
     env_file:
       - .env
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=osm-proxy
+      - traefik.http.routers.${DOCKER_NAME_PREFIX:-osmdev}.rule=Host(`${DOMAIN_NAME:-localhost}`)
+      - traefik.http.routers.${DOCKER_NAME_PREFIX:-osmdev}.entrypoints=websecure
+      - traefik.http.routers.${DOCKER_NAME_PREFIX:-osmdev}.tls.certresolver=le
+      - traefik.http.services.${DOCKER_NAME_PREFIX:-osmdev}.loadbalancer.server.port=3000
 
   memcached:
-    container_name: memcached
+    container_name: ${DOCKER_NAME_PREFIX:-osmdev}-memcached
     image: memcached:latest
-    ports:
-      - '11211:11211'
     networks:
       - local_network
 
-  # cgimap:
-  #   image: ghcr.io/openstreetmap/cgimap:latest
-  #   environment:
-  #     CGIMAP_DATABASE: openstreetmap
-  #     CGIMAP_HOST: db
-  #     CGIMAP_USERNAME: postgres
-  #     CGIMAP_PASSWORD: openstreetmap
-  #   depends_on:
-  #     - db
-  #   networks:
-  #     - local_network
-  #   ports:
-  #     - "8000:8000"
-
   db:
-    container_name: db
+    container_name: ${DOCKER_NAME_PREFIX:-osmdev}-db
+    image: ${DOCKER_NAME_PREFIX:-osmdev}-db 
     build:
-      context: ./../openstreetmap-website
+      context: ${BASE_REPO:-./../openstreetmap-website}
       dockerfile: docker/postgres/Dockerfile
-    ports:
-      - "54321:5432"
     env_file:
       - .env
     volumes:
@@ -92,52 +58,12 @@ services:
     networks:
       - local_network
 
-  gps-db:
-    container_name: gps-db
-    image: postgres:15
-    ports:
-      - "54322:5432"
-    environment:
-      POSTGRES_DB: openstreetmap_gps
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: openstreetmap
-    volumes:
-      - gps-db-data:/var/lib/postgresql/data
-    networks:
-      - local_network
-
-  pgadmin:
-    container_name: pgadmin
-    image: dpage/pgadmin4:latest
-    ports:
-      - "5050:80"
-    environment:
-      PGADMIN_DEFAULT_EMAIL: admin@osm.org
-      PGADMIN_DEFAULT_PASSWORD: admin
-      PGADMIN_CONFIG_SERVER_MODE: "False"
-      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: "False"
-    volumes:
-      - pgadmin-data:/var/lib/pgadmin
-      - ./pgadmin-servers.json:/pgadmin4/servers.json:ro
-      - ./pgpass:/pgpass:ro
-    networks:
-      - local_network
-    depends_on:
-      - db
-      - gps-db
-
 volumes:
-  letsencrypt:
   web-tmp:
   web-storage:
   db-data:
-    driver: local
-    name: pg_data
-  gps-db-data:
-    driver: local
-    name: gps_pg_data
-  pgadmin-data:
 
 networks:
   local_network:
-    driver: bridge
+  osm-proxy:
+    external: true

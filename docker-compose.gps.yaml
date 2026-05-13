@@ -1,0 +1,46 @@
+services:
+  web:
+    depends_on:
+      - gps-db
+    environment:
+      GPS_ENABLED: "1"
+
+  gps-db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: openstreetmap_gps
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: openstreetmap
+    volumes:
+      - gps-db-data:/var/lib/postgresql/data
+    networks:
+      - local_network
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@osm.org
+      PGADMIN_DEFAULT_PASSWORD: admin
+      PGADMIN_CONFIG_SERVER_MODE: "False"
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: "False"
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
+      - ./pgadmin-servers.json:/pgadmin4/servers.json:ro
+      - ./pgpass:/pgpass:ro
+    networks:
+      - local_network
+      - osm-proxy
+    depends_on:
+      - db
+      - gps-db
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=osm-proxy
+      - traefik.http.routers.${DOCKER_NAME_PREFIX:-osmdev}-pgadmin.rule=Host(`pgadmin-${DOMAIN_NAME:-localhost}`)
+      - traefik.http.routers.${DOCKER_NAME_PREFIX:-osmdev}-pgadmin.entrypoints=websecure
+      - traefik.http.routers.${DOCKER_NAME_PREFIX:-osmdev}-pgadmin.tls.certresolver=le
+      - traefik.http.services.${DOCKER_NAME_PREFIX:-osmdev}-pgadmin.loadbalancer.server.port=80
+
+volumes:
+  gps-db-data:
+  pgadmin-data:
