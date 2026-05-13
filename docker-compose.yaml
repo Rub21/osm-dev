@@ -7,6 +7,7 @@ services:
     environment:
       PIDFILE: /tmp/pids/server.pid
       DOMAIN_NAME: ${DOMAIN_NAME:-localhost}
+      INSTANCE_SLUG: ${DOCKER_NAME_PREFIX:-osmdev}
     volumes:
       - ${BASE_REPO:-./../openstreetmap-website}:/app
       - ./start.sh:/docker/start.sh

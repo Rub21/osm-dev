@@ -3,6 +3,9 @@
 
 require "json"
 
+slug = ENV["INSTANCE_SLUG"] || "default"
+tokens_file = "/docker/scripts/.tokens-#{slug}.json"
+
 usernames = [ENV["ADMIN_USER"], "mapper1", "mapper2", "mapper3"].compact
 
 # Wipe out any previous osm-dev test apps and their tokens, then sync the
@@ -35,5 +38,5 @@ usernames.each do |name|
   tokens[name] = token.token
 end
 
-File.write("/docker/scripts/.tokens.json", JSON.pretty_generate(tokens))
-puts "OAuth tokens written to /docker/scripts/.tokens.json (#{tokens.keys.join(', ')})"
+File.write(tokens_file, JSON.pretty_generate(tokens))
+puts "OAuth tokens written to #{tokens_file} (#{tokens.keys.join(', ')})"
