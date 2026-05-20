@@ -3,13 +3,15 @@ set -euo pipefail
 
 BRANCH="${1:-}"
 CMD="${2:-up}"
+FLAG="${3:-}"
 
 if [[ -z "$BRANCH" ]]; then
-  echo "usage: $0 <branch> [up|start|stop]" >&2
+  echo "usage: $0 <branch> [up|start|stop] [-v]" >&2
   echo "  examples:" >&2
   echo "    $0 gps_db" >&2
   echo "    $0 gps_visibility up" >&2
   echo "    $0 gps_db stop" >&2
+  echo "    $0 gps_db stop -v   # stop and remove volumes" >&2
   exit 1
 fi
 
@@ -47,7 +49,7 @@ case "$CMD" in
     else
       echo "==> fetching + checkout $BRANCH + pull --ff-only"
       git -C "$BASE_REPO" fetch origin
-      git -C "$BASE_REPO" checkout "$BRANCH"
+      # git -C "$BASE_REPO" checkout "$BRANCH"
       git -C "$BASE_REPO" pull --ff-only origin "$BRANCH"
     fi
 
@@ -72,12 +74,17 @@ case "$CMD" in
     fi
     ;;
   stop)
-    echo "==> docker compose stop ($SLUG)"
-    $DC stop
+    if [[ "$FLAG" == "-v" ]]; then
+      echo "==> docker compose down -v ($SLUG)  [removing volumes]"
+      $DC down -v
+    else
+      echo "==> docker compose stop ($SLUG)"
+      $DC stop
+    fi
     ;;
   *)
     echo "unknown command: $CMD" >&2
-    echo "usage: $0 <branch> [up|start|stop]" >&2
+    echo "usage: $0 <branch> [up|start|stop] [-v]" >&2
     exit 1
     ;;
 esac
