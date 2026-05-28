@@ -6,14 +6,30 @@ development:
     username: postgres
     password: openstreetmap
     encoding: utf8
-<% if ENV["GPS_ENABLED"] == "1" %>
   gps:
     adapter: postgresql
-    host: gps-db
+    host: db
     database: openstreetmap_gps
     username: postgres
     password: openstreetmap
     encoding: utf8
     connect_timeout: 3
     migrations_paths: db/gps_migrate
-<% end %>
+
+test:
+  primary:
+    adapter: postgresql
+    host: db
+    database: osm_test
+    username: postgres
+    password: openstreetmap
+    encoding: utf8
+  gps:
+    adapter: postgresql
+    host: db
+    database: osm_test_gps
+    username: postgres
+    password: openstreetmap
+    encoding: utf8
+    connect_timeout: 3
+    migrations_paths: db/gps_migrate

@@ -41,6 +41,30 @@ Add inside `deploy.sh` `case "$BRANCH"`:
 gps_db) COMPOSE_FILES="$COMPOSE_FILES -f docker-compose.gps.yaml" ;;
 ```
 
+## Run locally without deploy.sh
+
+For local dev on your laptop (no Traefik, no DNS), run docker compose directly with a custom prefix and `localhost` domain.
+
+```bash
+cd /Users/rub21/apps/osmf/osm-dev
+export DOCKER_NAME_PREFIX=gps-db   # gps-db-web, gps-db-db, gps-db-gps-db
+export DOMAIN_NAME=localhost
+docker compose -f docker-compose.yaml -f docker-compose.gps.yaml up -d --build
+```
+
+Run gps migrations once the containers are up:
+
+```bash
+docker compose -f docker-compose.yaml -f docker-compose.gps.yaml exec web \
+  bundle exec rails db:drop:gps db:create:gps db:migrate:gps
+```
+
+Stop and clean up:
+
+```bash
+docker compose -f docker-compose.yaml -f docker-compose.gps.yaml down -v
+```
+
 ## Notes
 
 - Host IP baked into nip.io. Change `NIP_DOMAIN` in `deploy.sh` if it moves.
