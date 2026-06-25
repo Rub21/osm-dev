@@ -11,9 +11,20 @@ done
 restore_db() {
   export PGPASSWORD="$POSTGRES_PASSWORD"
   export PAGER=cat
-  curl -s -o backup.sql "$BACKUP_FILE_URL"
-  psql -h "$POSTGRES_HOST" -U "$POSTGRES_USER" -d "$POSTGRES_DB" -f backup.sql
-  rm backup.sql
+
+  # Skip restore if the database is already populated
+  local existing
+  existing=$(psql -h "$POSTGRES_HOST" -U "$POSTGRES_USER" -d "$POSTGRES_DB" -tAc "SELECT to_regclass('public.users');")
+  if [ -n "$existing" ]; then
+    echo "Database already restored (table 'users' exists). Skipping restore."
+    return 0
+  fi
+
+  echo "Restoring database from backup..."
+  curl -s -o backup.dump "$BACKUP_FILE_URL"
+  pg_restore -h "$POSTGRES_HOST" -U "$POSTGRES_USER" -d "$POSTGRES_DB" \
+    --clean --if-exists --no-owner --no-acl backup.dump
+  rm backup.dump
 }
 
 #### Setting up required credentials
@@ -29,9 +40,9 @@ bundle exec rails runner /docker/scripts/setup_users.rb
 bundle exec rails runner /docker/scripts/generate_token.rb
 bundle exec rails jobs:work &
 
-while true; do
-  bundle exec rails runner /docker/scripts/activate_pending.rb 2>/dev/null
-  sleep 10
-done &
+# while true; do
+#   bundle exec rails runner /docker/scripts/activate_pending.rb 2>/dev/null
+#   sleep 10
+# done &
 
 bundle exec rails server -b 0.0.0.0 -p 3000

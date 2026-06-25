@@ -30,6 +30,20 @@ back to a previous version:
 
 URL: `https://<slug>.<your-ip>.nip.io` (slug = branch with `_` → `-`).
 
+## Backup / restore database
+
+Dump a branch's Postgres db (custom format, into `./backups/`):
+
+```bash
+./backup_db.sh simplify-gps-visibility
+```
+
+Restore a dump into a branch's db:
+
+```bash
+./restore_db.sh simplify-gps-visibility backups/simplify-gps-visibility-20260625-205120.dump
+```
+
 ## Layout
 
 ```

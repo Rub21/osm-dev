@@ -6,7 +6,11 @@ require "json"
 slug = ENV["INSTANCE_SLUG"] || "default"
 tokens_file = "/docker/scripts/.tokens-#{slug}.json"
 
-usernames = [ENV["ADMIN_USER"], "mapper1", "mapper2", "mapper3"].compact
+usernames = [ENV["ADMIN_USER"], "Rub21", "mapper1", "mapper2", "mapper3"].compact
+
+# Full set of OSM OAuth scopes (no wildcard exists; list them all explicitly)
+scopes = "read_prefs write_prefs write_diary write_api read_gpx write_gpx " \
+         "write_notes write_redactions read_email consume_messages send_messages openid"
 
 # Wipe out any previous osm-dev test apps and their tokens, then sync the
 # auto-increment sequences (out of sync after restore_db loads a SQL backup)
@@ -27,13 +31,13 @@ usernames.each do |name|
   app = Oauth2Application.create!(:name => app_name,
                                   :redirect_uri => "urn:ietf:wg:oauth:2.0:oob",
                                   :confidential => true,
-                                  :scopes => "read_prefs write_gpx",
+                                  :scopes => scopes,
                                   :owner_type => "User",
                                   :owner_id => user.id)
 
   token = Doorkeeper::AccessToken.create!(:application => app,
                                           :resource_owner_id => user.id,
-                                          :scopes => "read_prefs write_gpx")
+                                          :scopes => scopes)
 
   tokens[name] = token.token
 end
