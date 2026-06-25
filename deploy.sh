@@ -4,12 +4,15 @@ set -euo pipefail
 BRANCH="${1:-}"
 CMD="${2:-up}"
 FLAG="${3:-}"
+# For `up`, the 3rd arg is an optional git sha to deploy instead of branch HEAD.
+SHA="${3:-}"
 
 if [[ -z "$BRANCH" ]]; then
   echo "usage: $0 <branch> [up|start|stop] [-v]" >&2
   echo "  examples:" >&2
   echo "    $0 gps_db" >&2
   echo "    $0 gps_visibility up" >&2
+  echo "    $0 gps_db up <git-sha>   # deploy a specific commit (e.g. the previous version)" >&2
   echo "    $0 gps_db stop" >&2
   echo "    $0 gps_db stop -v   # stop and remove volumes" >&2
   exit 1
@@ -41,16 +44,30 @@ case "$CMD" in
     echo "==> $BRANCH ($SLUG) -> $DOMAIN_NAME"
     echo "    base repo: $BASE_REPO"
     echo "    compose:   $DC"
+    if [[ -n "$SHA" ]]; then
+      echo "    git sha:   $SHA"
+    fi
 
     if [[ ! -d "$BASE_REPO/.git" ]]; then
       echo "==> cloning $REPO_URL -> $BASE_REPO"
       git clone "$REPO_URL" "$BASE_REPO"
-      git -C "$BASE_REPO" checkout "$BRANCH"
+      if [[ -n "$SHA" ]]; then
+        echo "==> checkout $SHA (detached)"
+        git -C "$BASE_REPO" checkout "$SHA"
+      else
+        git -C "$BASE_REPO" checkout "$BRANCH"
+      fi
     else
-      echo "==> fetching + checkout $BRANCH + pull --ff-only"
+      echo "==> fetching origin"
       git -C "$BASE_REPO" fetch origin
-      # git -C "$BASE_REPO" checkout "$BRANCH"
-      git -C "$BASE_REPO" pull --ff-only origin "$BRANCH"
+      if [[ -n "$SHA" ]]; then
+        echo "==> checkout $SHA (detached)"
+        git -C "$BASE_REPO" checkout "$SHA"
+      else
+        echo "==> checkout $BRANCH + pull --ff-only"
+        git -C "$BASE_REPO" checkout "$BRANCH"
+        git -C "$BASE_REPO" pull --ff-only origin "$BRANCH"
+      fi
     fi
 
     echo "==> docker compose up -d --build"

@@ -13,9 +13,19 @@ cd /apps/osm-dev/proxy && docker compose up -d
 ```bash
 cd /apps/osm-dev
 ./deploy.sh gps_db              # clone + build + up
-./deploy.sh gps_visibility      # another branch
+./deploy.sh simplify-gps-visibility      # another branch
+./deploy.sh gps_db up <git-sha> # deploy a specific commit instead of branch HEAD
 ./deploy.sh gps_db stop         # stop (keeps data)
+./deploy.sh simplify-gps-visibility stop -v      # stop and remove volumes
 ./deploy.sh gps_db start        # restart stopped
+```
+
+By default `up` deploys the branch HEAD. Pass an optional git sha as the 3rd
+argument to deploy a specific commit (checked out detached) — useful to roll
+back to a previous version:
+
+```bash
+./deploy.sh simplify-gps-visibility up caaef96cd569e0599da60c4678eb9af070c50f45
 ```
 
 URL: `https://<slug>.<your-ip>.nip.io` (slug = branch with `_` → `-`).
