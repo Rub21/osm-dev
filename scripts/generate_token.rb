@@ -8,9 +8,11 @@ tokens_file = "/docker/scripts/.tokens-#{slug}.json"
 
 usernames = [ENV["ADMIN_USER"], "Rub21", "mapper1", "mapper2", "mapper3"].compact
 
-# Full set of OSM OAuth scopes (no wildcard exists; list them all explicitly)
-scopes = "read_prefs write_prefs write_diary write_api read_gpx write_gpx " \
-         "write_notes write_redactions read_email consume_messages send_messages openid"
+# All non-privileged OSM OAuth scopes, straight from the app's own constant so
+# it always matches this version. Privileged scopes (read_email,
+# skip_authorization) are excluded: Oauth2Application rejects them for non-admin
+# owners ("Permissions is invalid").
+scopes = Oauth::SCOPES.join(" ")
 
 # Wipe out any previous osm-dev test apps and their tokens, then sync the
 # auto-increment sequences (out of sync after restore_db loads a SQL backup)
