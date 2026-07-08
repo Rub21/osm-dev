@@ -51,8 +51,8 @@ services:
     build:
       context: ${BASE_REPO:-./../openstreetmap-website}
       dockerfile: docker/postgres/Dockerfile
-    ports:
-      - "54321:5432"
+    # ports:
+    #   - "54321:5432"
     env_file:
       - .env
     volumes:

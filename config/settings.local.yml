@@ -7,7 +7,7 @@ id_application: "tCygIMWpJVZ2c-vWYC_kI_YnMow3WmGbKLp2Rq_WgHI"
 memcache_servers: "memcached:11211"
 # Active Storage: "local" (disco) o "amazon" (S3). Las credenciales van en .env
 avatar_storage: "amazon"
-trace_file_storage: "amazon"
+trace_file_storage: "gps_traces"
 trace_image_storage: "amazon"
 trace_icon_storage: "amazon"
 nominatim_url: "https://nominatim.openstreetmap.org/"
