@@ -4,8 +4,14 @@ set -euo pipefail
 BRANCH="${1:-}"
 CMD="${2:-up}"
 FLAG="${3:-}"
-# For `up`, the 3rd arg is an optional git sha to deploy instead of branch HEAD.
+# For `up`, the 3rd arg is an optional git sha to deploy instead of branch HEAD,
+# or --no-sync to keep the local working tree untouched (no fetch/checkout/pull).
 SHA="${3:-}"
+SYNC=1
+if [[ "$SHA" == "--no-sync" ]]; then
+  SYNC=0
+  SHA=""
+fi
 
 if [[ -z "$BRANCH" ]]; then
   echo "usage: $0 <branch> [up|start|stop] [-v]" >&2
@@ -13,6 +19,7 @@ if [[ -z "$BRANCH" ]]; then
   echo "    $0 gps_db" >&2
   echo "    $0 gps_visibility up" >&2
   echo "    $0 gps_db up <git-sha>   # deploy a specific commit (e.g. the previous version)" >&2
+  echo "    $0 gps_db up --no-sync   # build from the local working tree, keep local changes" >&2
   echo "    $0 gps_db stop" >&2
   echo "    $0 gps_db stop -v   # stop and remove volumes" >&2
   exit 1
@@ -57,6 +64,8 @@ case "$CMD" in
       else
         git -C "$BASE_REPO" checkout "$BRANCH"
       fi
+    elif [[ "$SYNC" == "0" ]]; then
+      echo "==> skipping git sync (--no-sync), building from local working tree"
     else
       echo "==> fetching origin"
       git -C "$BASE_REPO" fetch origin
