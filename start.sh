@@ -40,6 +40,10 @@ bundle exec rails runner /docker/scripts/setup_users.rb
 bundle exec rails runner /docker/scripts/generate_token.rb
 bundle exec rails jobs:work &
 
+# Convert trackable/identifiable traces to linestrings (skips already converted ones).
+# NameError rescue keeps branches without the job working with the same start.sh.
+bundle exec rails runner "begin; TraceLinestringJob.perform_now; rescue NameError; puts 'TraceLinestringJob not defined, skipping'; end" &
+
 # while true; do
 #   bundle exec rails runner /docker/scripts/activate_pending.rb 2>/dev/null
 #   sleep 10

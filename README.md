@@ -15,6 +15,7 @@ cd /apps/osm-dev
 ./deploy.sh gps_db              # clone + build + up
 ./deploy.sh simplify-gps-visibility      # another branch
 ./deploy.sh gps_db up <git-sha> # deploy a specific commit instead of branch HEAD
+./deploy.sh simplify-gps-visibility up --no-sync # build from the local working tree, keep local changes
 ./deploy.sh gps_db stop         # stop (keeps data)
 ./deploy.sh simplify-gps-visibility stop -v      # stop and remove volumes
 ./deploy.sh gps_db start        # restart stopped
