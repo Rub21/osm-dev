@@ -4,6 +4,8 @@ Run multiple openstreetmap-website branches in parallel. Each on its own HTTPS s
 
 ## Start the proxy (once)
 
+this is only to server the website in the website
+
 ```bash
 cd /apps/osm-dev/proxy && docker compose up -d
 ```
@@ -12,13 +14,13 @@ cd /apps/osm-dev/proxy && docker compose up -d
 
 ```bash
 cd /apps/osm-dev
-./deploy.sh gps_db              # clone + build + up
-./deploy.sh simplify-gps-visibility      # another branch
-./deploy.sh gps_db up <git-sha> # deploy a specific commit instead of branch HEAD
+./deploy.sh gpx-tracks                    # clone + build + up
+./deploy.sh simplify-gps-visibility       # another branch
+./deploy.sh gpx-tracks up <git-sha>       # deploy a specific commit instead of branch HEAD
 ./deploy.sh simplify-gps-visibility up --no-sync # build from the local working tree, keep local changes
-./deploy.sh gps_db stop         # stop (keeps data)
+./deploy.sh gpx-tracks stop               # stop (keeps data)
 ./deploy.sh simplify-gps-visibility stop -v      # stop and remove volumes
-./deploy.sh gps_db start        # restart stopped
+./deploy.sh gpx-tracks start              # restart stopped
 ```
 
 By default `up` deploys the branch HEAD. Pass an optional git sha as the 3rd
@@ -45,29 +47,25 @@ Restore a dump into a branch's db:
 ./restore_db.sh simplify-gps-visibility backups/simplify-gps-visibility-20260625-205120.dump
 ```
 
-## Layout
-
-```
-/apps/
-├── osm-dev/
-│   ├── proxy/         shared Traefik
-│   ├── deploy.sh      entry point
-│   ├── docker-compose.yaml
-│   ├── docker-compose.gps.yaml   overlay (gps-db + pgadmin)
-│   └── start.sh       container boot
-└── instances/<branch>/openstreetmap-website/   per-branch clone
-```
 
 ## Per-branch overlays
 
 Add inside `deploy.sh` `case "$BRANCH"`:
 
 ```bash
-gps_db) COMPOSE_FILES="$COMPOSE_FILES -f docker-compose.gps.yaml" ;;
+gpx-tracks) COMPOSE_FILES="$COMPOSE_FILES -f docker-compose.gps.yaml" ;;
 ```
 
 ## Notes
 
 - Host IP baked into nip.io. Change `NIP_DOMAIN` in `deploy.sh` if it moves.
 - Ports 80/443 must be public for Let's Encrypt.
-- Each instance ≈ 1–2 GB RAM.
+
+## Local development (your own machine)
+
+```bash
+export COMPOSE_FILE=docker-compose.yaml:docker-compose.local.yaml
+docker compose up -d
+docker compose logs -f web
+docker compose exec web bash
+```

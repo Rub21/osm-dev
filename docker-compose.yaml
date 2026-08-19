@@ -26,6 +26,7 @@ services:
     stdin_open: true
     tty: true
     command: /docker/start.sh
+    
     depends_on:
       - db
       - memcached
@@ -47,12 +48,12 @@ services:
 
   db:
     container_name: ${DOCKER_NAME_PREFIX:-osmdev}-db
+    # image: ghcr.io/openhistoricalmap/db:0.0.1-0.dev.git.3423.h66378a9e
     image: ${DOCKER_NAME_PREFIX:-osmdev}-db 
     build:
       context: ${BASE_REPO:-./../openstreetmap-website}
       dockerfile: docker/postgres/Dockerfile
-    # ports:
-    #   - "54321:5432"
+
     env_file:
       - .env
     volumes:
