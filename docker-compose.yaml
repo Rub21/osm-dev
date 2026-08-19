@@ -61,6 +61,26 @@ services:
     networks:
       - local_network
 
+  # One-shot restore. It does not start with `docker compose up`, run it with:
+  #   docker compose --profile restore run --rm db_restore
+  db_restore:
+    container_name: ${DOCKER_NAME_PREFIX:-osmdev}-db-restore
+    build:
+      context: .
+      dockerfile: docker/restore.Dockerfile
+    profiles:
+      - restore
+    env_file:
+      - .env
+    volumes:
+      - ./scripts/restore_db.sh:/restore_db.sh:ro
+      - ./backups:/backups
+    networks:
+      - local_network
+    depends_on:
+      - db
+    entrypoint: ["bash", "/restore_db.sh"]
+
 volumes:
   web-tmp:
   web-storage:
