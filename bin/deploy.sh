@@ -22,14 +22,15 @@ set -a
 # shellcheck disable=SC1091
 source .env
 set +a
-: "${NIP_DOMAIN:?set NIP_DOMAIN in .env, for example 203-0-113-10.nip.io}"
+BASE_DOMAIN="${BASE_DOMAIN:-${NIP_DOMAIN:-}}"
+: "${BASE_DOMAIN:?set BASE_DOMAIN in .env, for example dev.example.org or 203-0-113-10.nip.io}"
 
 SLUG="${BRANCH//_/-}"
 INSTANCES_DIR="${INSTANCES_DIR:-/apps/instances}"
 export BASE_REPO="$INSTANCES_DIR/$BRANCH/openstreetmap-website"
 export DOCKER_NAME_PREFIX="$SLUG"
 export COMPOSE_PROJECT_NAME="$SLUG"
-export DOMAIN_NAME="${SLUG}.${NIP_DOMAIN}"
+export DOMAIN_NAME="${SLUG}.${BASE_DOMAIN}"
 
 # REPO on the command line, or REPO_URL in .env. "owner/repo" means GitHub.
 REPO_URL="${REPO:-${REPO_URL:-}}"

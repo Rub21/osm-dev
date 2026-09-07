@@ -30,19 +30,20 @@ make up PGADMIN=1  # pgAdmin on http://localhost:5050 (admin@osm.org / admin)
 
 ## Server
 
-Needs ports 80 and 443 open and `NIP_DOMAIN` + `ACME_EMAIL` in `.env`
-(`203.0.113.10` -> `NIP_DOMAIN=203-0-113-10.nip.io`).
+Needs ports 80 and 443 open, and in `.env`: `ACME_EMAIL` and `BASE_DOMAIN`. Each branch runs at
+`https://<slug>.<BASE_DOMAIN>`, so `BASE_DOMAIN` needs a wildcard DNS record (`DNS only` on Cloudflare):
+`A  *  <server ip>` -> `BASE_DOMAIN=example.org`. Without a domain use the IP: `BASE_DOMAIN=203-0-113-10.nip.io`.
 
 ```bash
 make proxy-up                                                     # once
-make up BRANCH=gps_db REPO=Rub21/openstreetmap-website            # clone, build, start -> https://gps-db.<NIP_DOMAIN>
-make up BRANCH=gps_db                                             # update to the branch head and rebuild
-make up BRANCH=gps_db SHA=abc123                                  # one specific commit
-make up BRANCH=gps_db NO_SYNC=1                                   # build the working tree as it is
-make logs BRANCH=gps_db
-make down BRANCH=gps_db                                           # stop, keep the data
-make clean BRANCH=gps_db                                          # delete the volumes
-make shell BRANCH=gps_db        # also console, psql, backup, restore
+make up BRANCH=traces-legacy-visibility REPO=Rub21/openstreetmap-website            # clone, build, start -> https://gps-db.<BASE_DOMAIN>
+make up BRANCH=traces-legacy-visibility                                             # update to the branch head and rebuild
+make up BRANCH=traces-legacy-visibility SHA=abc123                                  # one specific commit
+make up BRANCH=traces-legacy-visibility NO_SYNC=1                                   # build the working tree as it is
+make logs BRANCH=traces-legacy-visibility
+make down BRANCH=traces-legacy-visibility                                           # stop, keep the data
+make clean BRANCH=traces-legacy-visibility                                          # delete the volumes
+make shell BRANCH=traces-legacy-visibility        # also console, psql, backup, restore
 ```
 
 `REPO` is `owner/repo` on GitHub or a full git URL. Needed for the first clone; later it
@@ -54,8 +55,8 @@ pgAdmin binds to `127.0.0.1` only: `ssh -L 5050:localhost:5050 <server>`.
 ## Backup and restore
 
 ```bash
-make backup [BRANCH=gps_db]                                       # -> backups/<slug>-<date>.dump
-make restore BACKUP_FILE=/backups/<slug>-<date>.dump [BRANCH=gps_db]
+make backup [BRANCH=traces-legacy-visibility]                                       # -> backups/<slug>-<date>.dump
+make restore BACKUP_FILE=/backups/<slug>-<date>.dump [BRANCH=traces-legacy-visibility]
 make restore                                                      # downloads BACKUP_FILE_URL again
 ```
 
