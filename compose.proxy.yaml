@@ -1,0 +1,20 @@
+# Server: HTTPS through the shared Traefik proxy (make proxy-up).
+services:
+  web:
+    environment:
+      SERVER_PROTOCOL: https
+      SERVER_URL: ${DOMAIN_NAME:?set by bin/deploy.sh}
+    networks:
+      - default
+      - osm-proxy
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=osm-proxy
+      - traefik.http.routers.${DOCKER_NAME_PREFIX:-osmdev}.rule=Host(`${DOMAIN_NAME}`)
+      - traefik.http.routers.${DOCKER_NAME_PREFIX:-osmdev}.entrypoints=websecure
+      - traefik.http.routers.${DOCKER_NAME_PREFIX:-osmdev}.tls.certresolver=le
+      - traefik.http.services.${DOCKER_NAME_PREFIX:-osmdev}.loadbalancer.server.port=3000
+
+networks:
+  osm-proxy:
+    external: true

@@ -1,71 +1,81 @@
-# OSM Development Setup
+# osm-dev
 
-Run multiple openstreetmap-website branches in parallel. Each on its own HTTPS subdomain behind a shared Traefik proxy.
+Docker setup for [openstreetmap-website](https://github.com/openstreetmap/openstreetmap-website).
+Local: one instance with a full database. Server: several branches, each on its own HTTPS subdomain.
+Same `make` targets for both; add `BRANCH=<branch>` for the server. `make` lists them.
 
-## Start the proxy (once)
+## Local
 
-this is only to server the website in the website
-
-```bash
-cd /apps/osm-dev/proxy && docker compose up -d
-```
-
-## Deploy a branch
+Needs Docker, GNU make and the app repo at `../openstreetmap-website` (or `BASE_REPO=<path>`).
 
 ```bash
-cd /apps/osm-dev
-./deploy.sh gpx-tracks                    # clone + build + up
-./deploy.sh simplify-gps-visibility       # another branch
-./deploy.sh gpx-tracks up <git-sha>       # deploy a specific commit instead of branch HEAD
-./deploy.sh simplify-gps-visibility up --no-sync # build from the local working tree, keep local changes
-./deploy.sh gpx-tracks stop               # stop (keeps data)
-./deploy.sh simplify-gps-visibility stop -v      # stop and remove volumes
-./deploy.sh gpx-tracks start              # restart stopped
+git clone git@github.com:Rub21/osm-dev.git && cd osm-dev
+make up        # creates .env, builds, starts. First start restores the dump (a few minutes)
+make logs
 ```
 
-By default `up` deploys the branch HEAD. Pass an optional git sha as the 3rd
-argument to deploy a specific commit (checked out detached) — useful to roll
-back to a previous version:
+| what | where |
+|------|-------|
+| website | http://localhost:3000 |
+| users | `admin` / `12345678`, `mapper1`, `mapper2`, `mapper3` / `12345678` |
+| OAuth tokens | `.tokens/osmdev.json` |
+| database | `localhost:54321`, `postgres` / `openstreetmap` |
 
 ```bash
-./deploy.sh simplify-gps-visibility up caaef96cd569e0599da60c4678eb9af070c50f45
+make shell / console / psql
+make down          # stop, keep the data
+make clean         # delete the volumes
+make up PGADMIN=1  # pgAdmin on http://localhost:5050 (admin@osm.org / admin)
 ```
 
-URL: `https://<slug>.<your-ip>.nip.io` (slug = branch with `_` → `-`).
+## Server
 
-## Backup / restore database
-
-Dump a branch's Postgres db (custom format, into `./backups/`):
+Needs ports 80 and 443 open and `NIP_DOMAIN` + `ACME_EMAIL` in `.env`
+(`203.0.113.10` -> `NIP_DOMAIN=203-0-113-10.nip.io`).
 
 ```bash
-./backup_db.sh simplify-gps-visibility
+make proxy-up                                                     # once
+make up BRANCH=gps_db REPO=Rub21/openstreetmap-website            # clone, build, start -> https://gps-db.<NIP_DOMAIN>
+make up BRANCH=gps_db                                             # update to the branch head and rebuild
+make up BRANCH=gps_db SHA=abc123                                  # one specific commit
+make up BRANCH=gps_db NO_SYNC=1                                   # build the working tree as it is
+make logs BRANCH=gps_db
+make down BRANCH=gps_db                                           # stop, keep the data
+make clean BRANCH=gps_db                                          # delete the volumes
+make shell BRANCH=gps_db        # also console, psql, backup, restore
 ```
 
-Restore a dump into a branch's db:
+`REPO` is `owner/repo` on GitHub or a full git URL. Needed for the first clone; later it
+changes the origin. `REPO_URL` in `.env` works as a default.
+Code lives in `/apps/instances/<branch>/openstreetmap-website` (`INSTANCES_DIR` in `.env`).
+Branches that need extra compose files get a `case` in `bin/deploy.sh`.
+pgAdmin binds to `127.0.0.1` only: `ssh -L 5050:localhost:5050 <server>`.
+
+## Backup and restore
 
 ```bash
-./restore_db.sh simplify-gps-visibility backups/simplify-gps-visibility-20260625-205120.dump
+make backup [BRANCH=gps_db]                                       # -> backups/<slug>-<date>.dump
+make restore BACKUP_FILE=/backups/<slug>-<date>.dump [BRANCH=gps_db]
+make restore                                                      # downloads BACKUP_FILE_URL again
 ```
 
+`POST_RESTORE_SQL=/docker/<file>.sql` runs a SQL file after the restore, for branch specific clean-ups. Off by default.
 
-## Per-branch overlays
+## Files
 
-Add inside `deploy.sh` `case "$BRANCH"`:
+| file | purpose |
+|------|---------|
+| `.env` | secrets and per machine values, not in git. `.env.example` works locally as is |
+| `compose.yaml` | web, db, memcached, db_restore |
+| `compose.local.yaml` / `compose.proxy.yaml` | local ports / Traefik and https |
+| `compose.pgadmin.yaml` | optional pgAdmin |
+| `proxy/compose.yaml` | shared Traefik proxy |
+| `config/` | `database.yml`, `settings.local.yml`, `storage.yml` mounted into the app |
+| `bin/deploy.sh` | used by make with `BRANCH=`: git sync, then compose with the branch env |
+| `docker/entrypoint.sh` | web container start: restore if empty, migrate, users, tokens, server |
+| `docker/restore-db.sh` | restore, used on first start and by `make restore` |
+| `docker/post-start.sh` | branch specific jobs, runs only with `POST_START_SCRIPT` in `.env` |
+| `scripts/` | users, tokens, GPX upload tool (`scripts/README.md`) |
 
-```bash
-gpx-tracks) COMPOSE_FILES="$COMPOSE_FILES -f docker-compose.gps.yaml" ;;
-```
-
-## Notes
-
-- Host IP baked into nip.io. Change `NIP_DOMAIN` in `deploy.sh` if it moves.
-- Ports 80/443 must be public for Let's Encrypt.
-
-## Local development (your own machine)
-
-```bash
-export COMPOSE_FILE=docker-compose.yaml:docker-compose.local.yaml
-docker compose up -d
-docker compose logs -f web
-docker compose exec web bash
-```
+`RAILS_STORAGE_SERVICE=local` stores files in a volume, `amazon` uses S3 (`AWS_*`).
+`make lint` runs shellcheck and validates the compose files.

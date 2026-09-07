@@ -1,0 +1,78 @@
+# Base stack. Use it with compose.local.yaml (local) or compose.proxy.yaml (server).
+x-db-env: &db-env
+  POSTGRES_HOST: db
+  POSTGRES_DB: openstreetmap
+  POSTGRES_USER: postgres
+  POSTGRES_PASSWORD: openstreetmap
+
+services:
+  web:
+    container_name: ${DOCKER_NAME_PREFIX:-osmdev}-web
+    image: ${DOCKER_NAME_PREFIX:-osmdev}-web
+    build:
+      context: ${BASE_REPO:-../openstreetmap-website}
+    command: /docker/entrypoint.sh
+    env_file: .env
+    environment:
+      <<: *db-env
+      RAILS_ENV: development
+      PIDFILE: /tmp/pids/server.pid
+      INSTANCE_SLUG: ${DOCKER_NAME_PREFIX:-osmdev}
+    volumes:
+      - ${BASE_REPO:-../openstreetmap-website}:/app
+      - /app/node_modules
+      - web-tmp:/app/tmp
+      - web-storage:/app/storage
+      - ./docker:/docker:ro
+      - ./scripts:/scripts:ro
+      - ./.tokens:/tokens
+      - ./config/settings.local.yml:/app/config/settings.local.yml
+      - ./config/database.yml:/app/config/database.yml
+      - ./config/storage.yml:/app/config/storage.yml
+    tmpfs:
+      - /tmp/pids
+    depends_on:
+      - db
+      - memcached
+    stdin_open: true
+    tty: true
+
+  db:
+    container_name: ${DOCKER_NAME_PREFIX:-osmdev}-db
+    image: ${DOCKER_NAME_PREFIX:-osmdev}-db
+    build:
+      context: ${BASE_REPO:-../openstreetmap-website}
+      dockerfile: docker/postgres/Dockerfile
+    environment:
+      <<: *db-env
+    volumes:
+      - db-data:/var/lib/postgresql/data
+
+  memcached:
+    container_name: ${DOCKER_NAME_PREFIX:-osmdev}-memcached
+    image: memcached:latest
+
+  # make restore
+  db_restore:
+    container_name: ${DOCKER_NAME_PREFIX:-osmdev}-db-restore
+    build:
+      context: .
+      dockerfile: docker/restore.Dockerfile
+    profiles:
+      - restore
+    entrypoint: ["bash", "/docker/restore-db.sh"]
+    environment:
+      <<: *db-env
+      BACKUP_FILE_URL: ${BACKUP_FILE_URL:-}
+      BACKUP_FILE: ${BACKUP_FILE:-}
+      POST_RESTORE_SQL: ${POST_RESTORE_SQL:-}
+    volumes:
+      - ./docker:/docker:ro
+      - ./backups:/backups
+    depends_on:
+      - db
+
+volumes:
+  web-tmp:
+  web-storage:
+  db-data:

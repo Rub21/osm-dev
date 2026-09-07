@@ -1,4 +1,4 @@
-# Postgres client plus curl, so restore_db.sh can download the dump.
+# Postgres client plus curl, for docker/restore-db.sh.
 FROM postgres:14
 
 RUN apt-get update \
