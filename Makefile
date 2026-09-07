@@ -13,7 +13,7 @@ else
   SLUG := osmdev
 endif
 
-.PHONY: help setup up down clean logs shell console psql restore backup proxy-up proxy-down lint
+.PHONY: help setup up down clean logs shell console psql tokens restore backup proxy-up proxy-down lint
 
 help: ## Show this help
 	@grep -hE '^[a-zA-Z_-]+:.*## ' $(MAKEFILE_LIST) \
@@ -49,6 +49,10 @@ console: ## Rails console
 
 psql: ## psql on the database
 	$(COMPOSE) exec db psql -U postgres -d openstreetmap
+
+tokens: ## Print the OAuth tokens as JSON, one per user. REGEN=1 creates new ones
+	@$(if $(REGEN),$(COMPOSE) exec -T web bundle exec rails runner /scripts/generate_token.rb >/dev/null,true)
+	@cat .tokens/$(SLUG).json
 
 restore: ## Restore a dump: make restore [BACKUP_FILE=/backups/x.dump]
 	$(COMPOSE) --profile restore run --rm db_restore

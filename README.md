@@ -18,11 +18,12 @@ make logs
 |------|-------|
 | website | http://localhost:3000 |
 | users | `admin` / `12345678`, `mapper1`, `mapper2`, `mapper3` / `12345678` |
-| OAuth tokens | `.tokens/osmdev.json` |
+| OAuth tokens | `.tokens/osmdev.json`, one per user, regenerated on every start |
 | database | `localhost:54321`, `postgres` / `openstreetmap` |
 
 ```bash
 make shell / console / psql
+make tokens        # OAuth tokens as JSON: make tokens | jq -r .admin   (REGEN=1 creates new ones)
 make down          # stop, keep the data
 make clean         # delete the volumes
 make up PGADMIN=1  # pgAdmin on http://localhost:5050 (admin@osm.org / admin)
@@ -44,6 +45,7 @@ make logs BRANCH=traces-legacy-visibility
 make down BRANCH=traces-legacy-visibility                                           # stop, keep the data
 make clean BRANCH=traces-legacy-visibility                                          # delete the volumes
 make shell BRANCH=traces-legacy-visibility        # also console, psql, backup, restore
+make tokens BRANCH=traces-legacy-visibility 
 ```
 
 `REPO` is `owner/repo` on GitHub or a full git URL. Needed for the first clone; later it
