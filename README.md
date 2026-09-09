@@ -37,15 +37,15 @@ Needs ports 80 and 443 open, and in `.env`: `ACME_EMAIL` and `BASE_DOMAIN`. Each
 
 ```bash
 make proxy-up                                                     # once
-make up BRANCH=traces-legacy-visibility REPO=Rub21/openstreetmap-website            # clone, build, start -> https://gps-db.<BASE_DOMAIN>
-make up BRANCH=traces-legacy-visibility                                             # update to the branch head and rebuild
-make up BRANCH=traces-legacy-visibility SHA=abc123                                  # one specific commit
-make up BRANCH=traces-legacy-visibility NO_SYNC=1                                   # build the working tree as it is
-make logs BRANCH=traces-legacy-visibility
-make down BRANCH=traces-legacy-visibility                                           # stop, keep the data
-make clean BRANCH=traces-legacy-visibility                                          # delete the volumes
-make shell BRANCH=traces-legacy-visibility        # also console, psql, backup, restore
-make tokens BRANCH=traces-legacy-visibility 
+make up BRANCH=trackpoints-api REPO=Rub21/openstreetmap-website            # clone, build, start -> https://gps-db.<BASE_DOMAIN>
+make up BRANCH=trackpoints-api                                             # update to the branch head and rebuild
+make up BRANCH=trackpoints-api SHA=abc123                                  # one specific commit
+make up BRANCH=trackpoints-api NO_SYNC=1                                   # build the working tree as it is
+make logs BRANCH=trackpoints-api
+make down BRANCH=trackpoints-api                                           # stop, keep the data
+make clean BRANCH=trackpoints-api                                          # delete the volumes
+make shell BRANCH=trackpoints-api        # also console, psql, backup, restore
+make tokens BRANCH=trackpoints-api 
 ```
 
 `REPO` is `owner/repo` on GitHub or a full git URL. Needed for the first clone; later it
@@ -57,8 +57,8 @@ pgAdmin binds to `127.0.0.1` only: `ssh -L 5050:localhost:5050 <server>`.
 ## Backup and restore
 
 ```bash
-make backup [BRANCH=traces-legacy-visibility]                                       # -> backups/<slug>-<date>.dump
-make restore BACKUP_FILE=/backups/<slug>-<date>.dump [BRANCH=traces-legacy-visibility]
+make backup [BRANCH=trackpoints-api]                                       # -> backups/<slug>-<date>.dump
+make restore BACKUP_FILE=/backups/<slug>-<date>.dump [BRANCH=trackpoints-api]
 make restore                                                      # downloads BACKUP_FILE_URL again
 ```
 
