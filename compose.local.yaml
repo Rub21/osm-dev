@@ -1,0 +1,13 @@
+# Local: app on http://localhost:3000, database on localhost:54321.
+services:
+  web:
+    ports:
+      - "3000:3000"
+    environment:
+      SERVER_PROTOCOL: http
+      SERVER_URL: localhost:3000
+
+  db:
+    platform: linux/amd64  # postgis has no arm64 build
+    ports:
+      - "54321:5432"

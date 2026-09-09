@@ -1,2 +1,0 @@
-db:5432:openstreetmap:postgres:openstreetmap
-gps-db:5432:openstreetmap_gps:postgres:openstreetmap

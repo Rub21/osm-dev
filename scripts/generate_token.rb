@@ -1,10 +1,11 @@
 # Generate OAuth access tokens for the dev users created by setup_users.rb.
-# Writes a JSON mapping {username => token} to /docker/scripts/.tokens.json.
+# Writes a JSON mapping {username => token} to /tokens/<slug>.json,
+# which is ./.tokens/<slug>.json on the host.
 
 require "json"
 
-slug = ENV["INSTANCE_SLUG"] || "default"
-tokens_file = "/docker/scripts/.tokens-#{slug}.json"
+slug = ENV["INSTANCE_SLUG"] || "osmdev"
+tokens_file = "/tokens/#{slug}.json"
 
 usernames = [ENV["ADMIN_USER"], "Rub21", "mapper1", "mapper2", "mapper3"].compact
 

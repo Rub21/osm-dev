@@ -1,6 +1,6 @@
 # osm-dev scripts
 
-Helper scripts used by the dev environment. Mounted into the `web` container at `/docker/scripts` and triggered from `start.sh`.
+Helper scripts used by the dev environment. The Ruby ones are mounted into the `web` container at `/scripts` and run from `docker/entrypoint.sh` on every start; `test_visibility.py` runs on the host.
 
 ## Bulk upload GPX (host)
 
@@ -9,17 +9,17 @@ Helper scripts used by the dev environment. Mounted into the `web` container at 
 ```bash
 pip install requests
 
-INSTANCE_SLUG=gps-db \
-  OSM_URL=https://gps-db.<your-ip>.nip.io \
-  GPX_DIR=/apps/gps-fetcher/gpx_files \
-  python3 test_visibility.py
+INSTANCE_SLUG=osmdev \
+  OSM_URL=http://localhost:3000 \
+  GPX_DIR=./gpx \
+  python3 scripts/test_visibility.py
 ```
 
 ### Env vars
 
 | var             | default                                       | meaning                            |
 |-----------------|-----------------------------------------------|------------------------------------|
-| `INSTANCE_SLUG` | `default`                                     | branch slug (matches `deploy.sh`)  |
+| `INSTANCE_SLUG` | `osmdev`                                      | instance name, or the branch slug of `bin/deploy.sh` |
 | `OSM_URL`       | `http://localhost:3000`                       | API base URL                       |
 | `GPX_DIR`       | `./gpx`                                       | folder with `*.gpx` files          |
 | `LIMIT`         | `0`                                           | max files to upload (`0` = all)    |
@@ -31,24 +31,24 @@ INSTANCE_SLUG=gps-db \
 Upload first 20 files only:
 
 ```bash
-LIMIT=20 INSTANCE_SLUG=gps-db GPX_DIR=/apps/gps-fetcher/gpx_files \
-  python3 test_visibility.py
+LIMIT=20 GPX_DIR=./gpx \
+  python3 scripts/test_visibility.py
 ```
 
 Only test the two new (post-simplification) visibilities:
 
 ```bash
-VISIBILITIES=public,identifiable INSTANCE_SLUG=gps-db \
-  GPX_DIR=/apps/gps-fetcher/gpx_files python3 test_visibility.py
+VISIBILITIES=public,identifiable \
+  GPX_DIR=./gpx python3 scripts/test_visibility.py
 ```
 
 Only one user:
 
 ```bash
-USERS=admin INSTANCE_SLUG=gps-db \
-  GPX_DIR=/apps/gps-fetcher/gpx_files python3 test_visibility.py
+USERS=admin \
+  GPX_DIR=./gpx python3 scripts/test_visibility.py
 ```
 
 ## Files generated at runtime (gitignored)
 
-- `.tokens-<slug>.json` — written by `generate_token.rb` per instance. Slug from `INSTANCE_SLUG` env, set in `docker-compose.yaml` to `${DOCKER_NAME_PREFIX}` (deploy.sh slug, e.g. `gps-db`).
+- `../.tokens/<slug>.json` — written by `generate_token.rb` on every start. The slug is `INSTANCE_SLUG`, set in `compose.yaml` to `${DOCKER_NAME_PREFIX}`: `osmdev` locally, the branch slug on the server (e.g. `gps-db`).
