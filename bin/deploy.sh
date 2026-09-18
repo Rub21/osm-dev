@@ -88,7 +88,8 @@ case "$CMD" in
     echo ""
     echo "==> web: https://$DOMAIN_NAME"
     if [[ "$FILES" == *compose.pgadmin.yaml* ]]; then
-      echo "    pgadmin: https://$PGADMIN_DOMAIN_NAME  ($(envget PGADMIN_EMAIL) or admin@osm.org, PGADMIN_PASSWORD from .env)"
+      email="$(envget PGADMIN_EMAIL)"; email="${email:-admin@osm.org}"
+      echo "    pgadmin: https://$PGADMIN_DOMAIN_NAME  ($email / $(envget PGADMIN_PASSWORD))"
     fi
     ;;
   compose)
