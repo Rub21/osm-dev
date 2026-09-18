@@ -37,16 +37,16 @@ Needs ports 80 and 443 open, and in `.env`: `ACME_EMAIL` and `BASE_DOMAIN`. Each
 
 ```bash
 make proxy-up                                                     # once
-make up BRANCH=trackpoints-api REPO=Rub21/openstreetmap-website            # clone, build, start -> https://gps-db.<BASE_DOMAIN>
-make up BRANCH=trackpoints-api                                             # update to the branch head and rebuild
-make up BRANCH=trackpoints-api SHA=abc123                                  # one specific commit
-make up BRANCH=trackpoints-api NO_SYNC=1                                   # build the working tree as it is
-make logs BRANCH=trackpoints-api
-make down BRANCH=trackpoints-api                                           # stop, keep the data
-make clean BRANCH=trackpoints-api                                          # delete the volumes
-make shell BRANCH=trackpoints-api        # also console, psql, backup, restore
-make tokens BRANCH=trackpoints-api 
-make up BRANCH=trackpoints-api PGADMIN=1                                  # also pgAdmin at https://pgadmin-trackpoints-api.<BASE_DOMAIN> (PGADMIN_PASSWORD in .env)
+make up BRANCH=gpx-tracks REPO=Rub21/openstreetmap-website            # clone, build, start -> https://gps-db.<BASE_DOMAIN>
+make up BRANCH=gpx-tracks                                             # update to the branch head and rebuild
+make up BRANCH=gpx-tracks SHA=abc123                                  # one specific commit
+make up BRANCH=gpx-tracks NO_SYNC=1                                   # build the working tree as it is
+make logs BRANCH=gpx-tracks
+make down BRANCH=gpx-tracks                                           # stop, keep the data
+make clean BRANCH=gpx-tracks                                          # delete the volumes
+make shell BRANCH=gpx-tracks        # also console, psql, backup, restore
+make tokens BRANCH=gpx-tracks 
+make up BRANCH=gpx-tracks PGADMIN=1                                  # also pgAdmin at https://pgadmin-gpx-tracks.<BASE_DOMAIN> (PGADMIN_PASSWORD in .env)
 ```
 
 `REPO` is `owner/repo` on GitHub or a full git URL. Needed for the first clone; later it
@@ -58,8 +58,8 @@ pgAdmin binds to `127.0.0.1` only: `ssh -L 5050:localhost:5050 <server>`.
 ## Backup and restore
 
 ```bash
-make backup [BRANCH=trackpoints-api]                                       # -> backups/<slug>-<date>.dump
-make restore BACKUP_FILE=/backups/<slug>-<date>.dump [BRANCH=trackpoints-api]
+make backup [BRANCH=gpx-tracks]                                       # -> backups/<slug>-<date>.dump
+make restore BACKUP_FILE=/backups/<slug>-<date>.dump [BRANCH=gpx-tracks]
 make restore                                                      # downloads BACKUP_FILE_URL again
 ```
 
