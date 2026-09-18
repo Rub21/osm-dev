@@ -8,7 +8,7 @@
       "MaintenanceDB": "openstreetmap",
       "Username": "postgres",
       "SSLMode": "prefer",
-      "PassFile": "/var/lib/pgadmin/.pgpass"
+      "PassFile": "/.pgpass"
     }
   }
 }

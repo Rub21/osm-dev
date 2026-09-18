@@ -8,6 +8,7 @@ services:
       PGADMIN_DEFAULT_PASSWORD: admin
       PGADMIN_CONFIG_SERVER_MODE: "False"
       PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: "False"
+      PGPASS_FILE: /pgpass
     ports:
       - "127.0.0.1:${PGADMIN_PORT:-5050}:80"
     volumes:

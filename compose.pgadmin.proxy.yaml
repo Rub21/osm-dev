@@ -1,0 +1,25 @@
+# Server: pgAdmin on https://pgadmin-<slug>.<BASE_DOMAIN> through Traefik, with login.
+# Loaded by bin/deploy.sh together with compose.pgadmin.yaml when PGADMIN=1.
+services:
+  pgadmin:
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@osm.org}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:?set PGADMIN_PASSWORD in .env, pgAdmin is public on the server}
+      PGADMIN_CONFIG_SERVER_MODE: "True"
+    volumes:
+      # Server mode resolves PassFile inside /var/lib/pgadmin/storage/<user>/, where PGPASS_FILE is copied.
+      - ./config/pgadmin-servers.server.json:/pgadmin4/servers.json:ro
+    networks:
+      - default
+      - osm-proxy
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=osm-proxy
+      - traefik.http.routers.${DOCKER_NAME_PREFIX:-osmdev}-pgadmin.rule=Host(`${PGADMIN_DOMAIN_NAME}`)
+      - traefik.http.routers.${DOCKER_NAME_PREFIX:-osmdev}-pgadmin.entrypoints=websecure
+      - traefik.http.routers.${DOCKER_NAME_PREFIX:-osmdev}-pgadmin.tls.certresolver=le
+      - traefik.http.services.${DOCKER_NAME_PREFIX:-osmdev}-pgadmin.loadbalancer.server.port=80
+
+networks:
+  osm-proxy:
+    external: true

@@ -46,6 +46,7 @@ make down BRANCH=trackpoints-api                                           # sto
 make clean BRANCH=trackpoints-api                                          # delete the volumes
 make shell BRANCH=trackpoints-api        # also console, psql, backup, restore
 make tokens BRANCH=trackpoints-api 
+make up BRANCH=trackpoints-api PGADMIN=1                                  # also pgAdmin at https://pgadmin-trackpoints-api.<BASE_DOMAIN> (PGADMIN_PASSWORD in .env)
 ```
 
 `REPO` is `owner/repo` on GitHub or a full git URL. Needed for the first clone; later it

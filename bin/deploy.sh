@@ -35,13 +35,15 @@ export BASE_REPO="$INSTANCES_DIR/$BRANCH/openstreetmap-website"
 export DOCKER_NAME_PREFIX="$SLUG"
 export COMPOSE_PROJECT_NAME="$SLUG"
 export DOMAIN_NAME="${SLUG}.${BASE_DOMAIN}"
+export PGADMIN_DOMAIN_NAME="pgadmin-${SLUG}.${BASE_DOMAIN}"
 
 # REPO on the command line, or REPO_URL in .env. "owner/repo" means GitHub.
 REPO_URL="${REPO:-$(envget REPO_URL)}"
 [[ -z "$REPO_URL" || "$REPO_URL" == *:* ]] || REPO_URL="https://github.com/$REPO_URL.git"
 
-# Extra compose files per branch: case "$BRANCH" in my_branch) FILES="$FILES -f compose.pgadmin.yaml" ;; esac
+# Extra compose files. PGADMIN=1 adds pgAdmin, same as in local mode.
 FILES="-f compose.yaml -f compose.proxy.yaml"
+[[ -n "${PGADMIN:-}" ]] && FILES="$FILES -f compose.pgadmin.yaml -f compose.pgadmin.proxy.yaml"
 
 dc() {
   # shellcheck disable=SC2086
@@ -86,8 +88,7 @@ case "$CMD" in
     echo ""
     echo "==> web: https://$DOMAIN_NAME"
     if [[ "$FILES" == *compose.pgadmin.yaml* ]]; then
-      port="$(envget PGADMIN_PORT)"; port="${port:-5050}"
-      echo "    pgadmin: ssh -L $port:localhost:$port <server>"
+      echo "    pgadmin: https://$PGADMIN_DOMAIN_NAME  ($(envget PGADMIN_EMAIL) or admin@osm.org, PGADMIN_PASSWORD from .env)"
     fi
     ;;
   compose)
