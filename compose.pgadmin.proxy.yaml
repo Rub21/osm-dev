@@ -6,6 +6,9 @@ services:
       PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@osm.org}
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:?set PGADMIN_PASSWORD in .env, pgAdmin is public on the server}
       PGADMIN_CONFIG_SERVER_MODE: "True"
+      # Behind Cloudflare every request comes from a different edge IP. This option
+      # binds the session to the client IP, so pgAdmin logs you out on the next request.
+      PGADMIN_CONFIG_ENHANCED_COOKIE_PROTECTION: "False"
     volumes:
       # Server mode resolves PassFile inside /var/lib/pgadmin/storage/<user>/, where PGPASS_FILE is copied.
       - ./config/pgadmin-servers.server.json:/pgadmin4/servers.json:ro
