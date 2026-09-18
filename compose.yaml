@@ -11,6 +11,8 @@ services:
     image: ${DOCKER_NAME_PREFIX:-osmdev}-web
     build:
       context: ${BASE_REPO:-../openstreetmap-website}
+      args:
+        RUBY_VERSION: ${RUBY_VERSION:-3.3}
     command: /docker/entrypoint.sh
     env_file: .env
     environment:
