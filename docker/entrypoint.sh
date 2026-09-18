@@ -22,6 +22,7 @@ echo "==> migrations, dev users and tokens"
 bundle exec rails db:migrate --trace
 bundle exec rails runner /scripts/setup_users.rb
 bundle exec rails runner /scripts/generate_token.rb
+bundle exec rails runner /scripts/oauth-apps/create_app.rb
 
 if [[ -n "${POST_START_SCRIPT:-}" ]]; then
   echo "==> running $POST_START_SCRIPT"

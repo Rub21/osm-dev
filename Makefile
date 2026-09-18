@@ -13,7 +13,7 @@ else
   SLUG := osmdev
 endif
 
-.PHONY: help setup up down clean logs shell console psql tokens restore backup proxy-up proxy-down lint
+.PHONY: help setup up down clean logs shell console psql tokens app apps restore backup proxy-up proxy-down lint
 
 help: ## Show this help
 	@grep -hE '^[a-zA-Z_-]+:.*## ' $(MAKEFILE_LIST) \
@@ -53,6 +53,14 @@ psql: ## psql on the database
 tokens: ## Print the OAuth tokens as JSON, one per user. REGEN=1 creates new ones
 	@$(if $(REGEN),$(COMPOSE) exec -T web bundle exec rails runner /scripts/generate_token.rb >/dev/null,true)
 	@cat .tokens/$(SLUG).json
+
+app: ## Create or replace one OAuth app: make app NAME=josm [SCOPES="..."] [REDIRECT=...]
+	@test -n "$(NAME)" || (echo "usage: make app NAME=<name> [SCOPES=\"read_prefs write_gpx\"] [REDIRECT=<uri>] [BRANCH=<branch>]"; exit 1)
+	@$(COMPOSE) exec -T -e APP_NAME="$(NAME)" -e SCOPES="$(SCOPES)" -e REDIRECT_URI="$(REDIRECT)" web bundle exec rails runner /scripts/oauth-apps/create_app.rb
+
+apps: ## Print the OAuth apps of the instance as JSON, with client id and secret (scripts/oauth-apps/apps.json says which ones exist)
+	@$(COMPOSE) exec -T web bundle exec rails runner /scripts/oauth-apps/create_app.rb >/dev/null
+	@cat .tokens/$(SLUG)-apps.json
 
 restore: ## Restore a dump: make restore [BACKUP_FILE=/backups/x.dump]
 	$(COMPOSE) --profile restore run --rm db_restore

@@ -1,0 +1,10 @@
+{
+  "gpx-upload": {
+    "redirect_uri": "urn:ietf:wg:oauth:2.0:oob",
+    "scopes": "read_prefs write_gpx read_gpx"
+  },
+  "josm": {
+    "redirect_uri": "http://127.0.0.1:8111/oauth_authorization",
+    "scopes": "read_prefs write_api read_gpx write_gpx write_notes"
+  }
+}
