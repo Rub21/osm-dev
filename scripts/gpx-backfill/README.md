@@ -10,6 +10,10 @@ Run, 4 processes, blocks of 1000 ids:
 
 ```bash
 docker exec -it -e RAILS_ENV=development -e LOGDIR=/app/tmp/gpx-tracks gpx-tracks-web bash -c "cd /app && /scripts/gpx-backfill/gpx-backfill.sh run 2 200"
+
+# docker exec -it gpx-tracks-web bash
+# export LOGDIR=/app/tmp/gpx-tracks
+# /scripts/gpx-backfill/gpx-backfill.sh run 2 200
 ```
 
 Status and stop:

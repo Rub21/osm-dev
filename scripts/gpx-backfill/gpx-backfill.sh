@@ -114,8 +114,8 @@ cmd_block() {
 }
 
 cmd_status() {
-  local log range from to done_to size progress percent state segments empty
-  local all=0 all_done=0 all_segments=0 all_empty=0
+  local log range from to done_to size progress percent state traces segments empty
+  local all=0 all_done=0 all_traces=0 all_segments=0 all_empty=0
 
   for log in "$LOGDIR"/backfill-*.log; do
     [ -f "$log" ] || continue
@@ -137,22 +137,25 @@ cmd_status() {
     pgrep -f "MAX_TRACE=$to" > /dev/null && state=running
     [ "$progress" -ge "$size" ] && state=done
 
+    traces=$(awk -F'traces=' '/^range /{split($2,a," "); s+=a[1]} END{print s+0}' "$log")
     segments=$(awk -F'segments=' '/^range /{split($2,a," "); s+=a[1]} END{print s+0}' "$log")
     empty=$(awk -F'empty=' '/^range /{split($2,a," "); s+=a[1]} END{print s+0}' "$log")
 
-    printf "%-22s %3d%%  %12s / %-12s segments=%-12s %s\n" \
-      "$range" "$percent" "$progress" "$size" "$segments" "$state"
+    printf "%-22s %3d%%  ids %8s / %-8s traces=%-8s segments=%-10s %s\n" \
+      "$range" "$percent" "$progress" "$size" "$traces" "$segments" "$state"
 
     all=$((all + size))
     all_done=$((all_done + progress))
+    all_traces=$((all_traces + traces))
     all_segments=$((all_segments + segments))
     all_empty=$((all_empty + empty))
   done
 
   [ "$all" -gt 0 ] || { echo "no logs in $LOGDIR"; return; }
 
-  printf "\n%-22s %3d%%  %12s / %-12s segments=%s\n" \
-    total $((all_done * 100 / all)) "$all_done" "$all" "$all_segments"
+  printf "\n%-22s %3d%%  ids %8s / %-8s traces=%-8s segments=%s\n" \
+    total $((all_done * 100 / all)) "$all_done" "$all" "$all_traces" "$all_segments"
+  echo "ids are trace id ranges, they have gaps; traces is the number of traces converted"
 
   echo "traces that wrote nothing: $all_empty"
   echo "errors: $(cat "$LOGDIR"/backfill-*.log | grep -c ' error=' || true)"
