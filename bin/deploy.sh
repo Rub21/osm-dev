@@ -70,7 +70,7 @@ sync_repo() {
     git -C "$BASE_REPO" checkout "$sha"
   else
     echo "==> checkout $BRANCH and pull"
-    git -C "$BASE_REPO" checkout "$BRANCH"
+    git -C "$BASE_REPO" checkout "$BRANCH" --
     git -C "$BASE_REPO" pull --ff-only origin "$BRANCH"
   fi
 }
