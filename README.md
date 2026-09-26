@@ -100,3 +100,4 @@ gone while their rows stay in `active_storage_blobs` (broken images, 404 on down
 
 `RAILS_STORAGE_SERVICE=local` stores files in a volume, `amazon` uses S3 (`AWS_*`).
 `make lint` runs shellcheck and validates the compose files.
+`make test [ARGS=test/jobs]` runs the Rails tests on `openstreetmap_test`, a separate database that Rails rebuilds on every run. Do not set `DATABASE_URL` in `.env`, it overrides `database.yml` for every environment.

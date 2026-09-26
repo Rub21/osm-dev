@@ -13,7 +13,7 @@ else
   SLUG := osmdev
 endif
 
-.PHONY: help setup up down clean logs shell console psql tokens app apps restore backup proxy-up proxy-down lint
+.PHONY: help setup up down clean logs shell console psql test tokens app apps restore backup proxy-up proxy-down lint
 
 help: ## Show this help
 	@grep -hE '^[a-zA-Z_-]+:.*## ' $(MAKEFILE_LIST) \
@@ -32,11 +32,12 @@ else
 	@echo "web: http://localhost:3000   first start: make logs"
 endif
 
-down: ## Stop, keep the data
-	$(COMPOSE) stop
+down: ## Stop, keep the data. Also removes pgAdmin when it was started with PGADMIN=1
+	$(COMPOSE) down --remove-orphans
 
-clean: ## Stop and delete the volumes
-	$(COMPOSE) down -v
+clean: ## Stop and delete the volumes, pgAdmin included
+	$(COMPOSE) down -v --remove-orphans
+	docker volume rm -f $(SLUG)_pgadmin-data >/dev/null
 
 logs: ## Follow the web logs
 	$(COMPOSE) logs -f web
@@ -49,6 +50,9 @@ console: ## Rails console
 
 psql: ## psql on the database
 	$(COMPOSE) exec db psql -U postgres -d openstreetmap
+
+test: ## Run the Rails tests on openstreetmap_test: make test [ARGS=test/jobs]
+	$(COMPOSE) exec -e RAILS_ENV=test web sh -c 'unset DATABASE_URL; bundle exec rails db:create db:test:prepare >/dev/null 2>&1; bundle exec rails test $(ARGS)'
 
 tokens: ## Print the OAuth tokens as JSON, one per user. REGEN=1 creates new ones
 	@$(if $(REGEN),$(COMPOSE) exec -T web bundle exec rails runner /scripts/generate_token.rb >/dev/null,true)

@@ -6,3 +6,12 @@ development:
     username: postgres
     password: openstreetmap
     encoding: utf8
+# Rails erases and rebuilds the test database on every run, so it must not be the development one.
+test:
+  primary:
+    adapter: postgresql
+    host: db
+    database: openstreetmap_test
+    username: postgres
+    password: openstreetmap
+    encoding: utf8
