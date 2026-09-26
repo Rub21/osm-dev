@@ -65,6 +65,23 @@ make restore                                                      # downloads BA
 
 `POST_RESTORE_SQL=/docker/<file>.sql` runs a SQL file after the restore, for branch specific clean-ups. Off by default.
 
+## Postgres upgrade
+
+Upstream moved the db image from Postgres 14 to 17 (`docker/postgres/Dockerfile`, 2026-09-18). A `db-data`
+volume made with 14 does not start on 17, and a dump made with 17 needs `pg_restore` 17 (`docker/restore.Dockerfile`).
+To move an instance:
+
+```bash
+make backup BRANCH=<branch>                                   # dump with the old server, before pulling
+make clean BRANCH=<branch>                                    # deletes db-data AND web-storage
+make up BRANCH=<branch>
+make restore BACKUP_FILE=/backups/<slug>-<date>.dump BRANCH=<branch>
+```
+
+`make clean` also deletes the `web-storage` volume. With `RAILS_STORAGE_SERVICE=local` the trace files and images are
+gone while their rows stay in `active_storage_blobs` (broken images, 404 on download). Use `amazon` on the server, or copy
+`/var/lib/docker/volumes/<slug>_web-storage/_data` out before `make clean`.
+
 ## Files
 
 | file | purpose |
