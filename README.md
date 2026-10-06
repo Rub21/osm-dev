@@ -53,7 +53,7 @@ make up BRANCH=gpx-tracks PGADMIN=1                                  # also pgAd
 changes the origin. `REPO_URL` in `.env` works as a default.
 Code lives in `/apps/instances/<branch>/openstreetmap-website` (`INSTANCES_DIR` in `.env`).
 Branches that need extra compose files get a `case` in `bin/deploy.sh`.
-pgAdmin binds to `127.0.0.1` only: `ssh -L 5050:localhost:5050 <server>`.
+On the server pgAdmin has no host port, so several instances can run it at the same time.
 
 ## Backup and restore
 
