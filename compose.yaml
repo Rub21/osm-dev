@@ -38,6 +38,11 @@ services:
       - memcached
     stdin_open: true
     tty: true
+    logging:
+      driver: json-file
+      options:
+        max-size: "100m"
+        max-file: "3"
 
   db:
     container_name: ${DOCKER_NAME_PREFIX:-osmdev}-db
