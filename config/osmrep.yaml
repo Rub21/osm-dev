@@ -1,0 +1,6 @@
+# osmrep settings for osm-dev. database and data_dir come from the environment in compose.osmrep.yaml.
+database: set-by-OSMREP_DATABASE
+data_dir: set-by-OSMREP_DATA_DIR
+sources:
+  gpx:
+    limit: 1000

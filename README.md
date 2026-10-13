@@ -27,6 +27,7 @@ make tokens        # OAuth tokens as JSON: make tokens | jq -r .admin   (REGEN=1
 make down          # stop, keep the data
 make clean         # delete the volumes
 make up PGADMIN=1  # pgAdmin on http://localhost:5050 (admin@osm.org / admin)
+make up OSMREP=1   # traces replication with osmrep, files on http://localhost:8081/gpx/
 ```
 
 ## Server
@@ -47,6 +48,7 @@ make clean BRANCH=gpx-tracks                                          # delete t
 make shell BRANCH=gpx-tracks        # also console, psql, backup, restore
 make tokens BRANCH=gpx-tracks 
 make up BRANCH=gpx-tracks PGADMIN=1                                  # also pgAdmin at https://pgadmin-gpx-tracks.<BASE_DOMAIN> (PGADMIN_PASSWORD in .env)
+make up BRANCH=gpx-soft-delete OSMREP=1                              # also osmrep, files at https://replication-gpx-soft-delete.<BASE_DOMAIN>/gpx/
 ```
 
 `REPO` is `owner/repo` on GitHub or a full git URL. Needed for the first clone; later it
@@ -90,6 +92,7 @@ gone while their rows stay in `active_storage_blobs` (broken images, 404 on down
 | `compose.yaml` | web, db, memcached, db_restore |
 | `compose.local.yaml` / `compose.proxy.yaml` | local ports / Traefik and https |
 | `compose.pgadmin.yaml` | optional pgAdmin |
+| `compose.osmrep.yaml` | optional traces replication: [osmrep](https://github.com/Rub21/osmrep) every 60 s plus nginx for the files |
 | `proxy/compose.yaml` | shared Traefik proxy |
 | `config/` | `database.yml`, `settings.local.yml`, `storage.yml` mounted into the app |
 | `bin/deploy.sh` | used by make with `BRANCH=`: git sync, then compose with the branch env |

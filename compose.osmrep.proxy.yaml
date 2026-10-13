@@ -1,0 +1,19 @@
+# Server: replication files on https://replication-<slug>.<BASE_DOMAIN> through Traefik.
+# Loaded by bin/deploy.sh together with compose.osmrep.yaml when OSMREP=1.
+services:
+  replication:
+    ports: !reset []
+    networks:
+      - default
+      - osm-proxy
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=osm-proxy
+      - traefik.http.routers.${DOCKER_NAME_PREFIX:-osmdev}-replication.rule=Host(`${REPLICATION_DOMAIN_NAME}`)
+      - traefik.http.routers.${DOCKER_NAME_PREFIX:-osmdev}-replication.entrypoints=websecure
+      - traefik.http.routers.${DOCKER_NAME_PREFIX:-osmdev}-replication.tls.certresolver=le
+      - traefik.http.services.${DOCKER_NAME_PREFIX:-osmdev}-replication.loadbalancer.server.port=80
+
+networks:
+  osm-proxy:
+    external: true

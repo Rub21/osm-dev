@@ -36,14 +36,31 @@ export DOCKER_NAME_PREFIX="$SLUG"
 export COMPOSE_PROJECT_NAME="$SLUG"
 export DOMAIN_NAME="${SLUG}.${BASE_DOMAIN}"
 export PGADMIN_DOMAIN_NAME="pgadmin-${SLUG}.${BASE_DOMAIN}"
+export REPLICATION_DOMAIN_NAME="replication-${SLUG}.${BASE_DOMAIN}"
+export OSMREP_REPO="$INSTANCES_DIR/$BRANCH/osmrep"
 
 # REPO on the command line, or REPO_URL in .env. "owner/repo" means GitHub.
 REPO_URL="${REPO:-$(envget REPO_URL)}"
 [[ -z "$REPO_URL" || "$REPO_URL" == *:* ]] || REPO_URL="https://github.com/$REPO_URL.git"
 
-# Extra compose files. PGADMIN=1 adds pgAdmin, same as in local mode.
+# Extra compose files. PGADMIN=1 adds pgAdmin, OSMREP=1 adds the traces replication, same as in local mode.
 FILES="-f compose.yaml -f compose.proxy.yaml"
 [[ -n "${PGADMIN:-}" ]] && FILES="$FILES -f compose.pgadmin.yaml -f compose.pgadmin.proxy.yaml"
+[[ -n "${OSMREP:-}" ]] && FILES="$FILES -f compose.osmrep.yaml -f compose.osmrep.proxy.yaml"
+
+# osmrep repo for OSMREP=1. OSMREP_REPO_URL in .env, default the GitHub repo, branch main.
+OSMREP_REPO_URL="${OSMREP_REPO_URL:-$(envget OSMREP_REPO_URL)}"
+OSMREP_REPO_URL="${OSMREP_REPO_URL:-https://github.com/Rub21/osmrep.git}"
+
+sync_osmrep() {
+  if [[ ! -d "$OSMREP_REPO/.git" ]]; then
+    echo "==> cloning $OSMREP_REPO_URL -> $OSMREP_REPO"
+    git clone "$OSMREP_REPO_URL" "$OSMREP_REPO"
+  else
+    echo "==> pulling osmrep"
+    git -C "$OSMREP_REPO" pull --ff-only
+  fi
+}
 
 dc() {
   # shellcheck disable=SC2086
@@ -83,6 +100,7 @@ case "$CMD" in
       [[ -d "$BASE_REPO/.git" ]] || { echo "error: $BASE_REPO does not exist, run without NO_SYNC first" >&2; exit 1; }
     else
       sync_repo "$ARG"
+      [[ -n "${OSMREP:-}" ]] && sync_osmrep
     fi
     dc up -d --build
     echo ""
@@ -90,6 +108,9 @@ case "$CMD" in
     if [[ "$FILES" == *compose.pgadmin.yaml* ]]; then
       email="$(envget PGADMIN_EMAIL)"; email="${email:-admin@osm.org}"
       echo "    pgadmin: https://$PGADMIN_DOMAIN_NAME  ($email / $(envget PGADMIN_PASSWORD))"
+    fi
+    if [[ "$FILES" == *compose.osmrep.yaml* ]]; then
+      echo "    replication: https://$REPLICATION_DOMAIN_NAME/gpx/"
     fi
     ;;
   compose)
