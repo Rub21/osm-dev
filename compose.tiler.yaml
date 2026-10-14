@@ -15,13 +15,13 @@ services:
     volumes:
       - tiler-db-data:/var/lib/postgresql/data
 
-  tiler:
-    container_name: ${DOCKER_NAME_PREFIX:-osmdev}-tiler
+  tiler-importer:
+    container_name: ${DOCKER_NAME_PREFIX:-osmdev}-tiler-importer
     image: ${DOCKER_NAME_PREFIX:-osmdev}-osmrep
     build:
       context: .
       dockerfile: docker/osmrep.Dockerfile
-    command: /docker/tiler-loop.sh
+    command: /docker/tiler-importer.sh
     environment:
       OSMREP_TARGET: postgres://postgres:openstreetmap@tiler-db:5432/gpstiles
       OSMREP_FEED_URL: ${TILER_FEED_URL:-http://replication/gpx/}

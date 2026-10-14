@@ -28,7 +28,7 @@ make down          # stop, keep the data
 make clean         # delete the volumes
 make up PGADMIN=1  # pgAdmin on http://localhost:5050 (admin@osm.org / admin)
 make up OSMREP=1   # traces replication with osmrep, files on http://localhost:8081/gpx/
-make up OSMREP=1 TILER=1  # plus a consumer PostGIS (gpstiles) that imports the dump and follows the feed
+make up OSMREP=1 TILER=1  # plus tiler-importer: a consumer PostGIS (gpstiles) that imports the dump and follows the feed
 make gpx-dump OSMREP=1  # full traces dump, gpx-planet-<date>.osm.bz2 on http://localhost:8081/gps/
 ```
 

@@ -114,7 +114,7 @@ case "$CMD" in
       echo "    replication: https://$REPLICATION_DOMAIN_NAME/gpx/"
     fi
     if [[ "$FILES" == *compose.tiler.yaml* ]]; then
-      echo "    tiler: consumer database gpstiles, make tiler-psql BRANCH=$BRANCH TILER=1"
+      echo "    tiler-importer: consumer database gpstiles, make tiler-psql BRANCH=$BRANCH TILER=1"
     fi
     ;;
   compose)
