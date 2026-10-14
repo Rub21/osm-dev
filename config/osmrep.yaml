@@ -4,3 +4,5 @@ data_dir: set-by-OSMREP_DATA_DIR
 sources:
   gpx:
     limit: 1000
+    # Traces that carry their points: identifiable (full) and trackable (points only).
+    content_visibilities: [identifiable, trackable]

@@ -63,7 +63,7 @@ osmrep: ## Run one osmrep command in the replication container: make osmrep OSMR
 gpx-dump: ## Full traces dump like planetdump, served by nginx at /gps/: make gpx-dump OSMREP=1
 	$(COMPOSE) exec -e PGHOST=db -e PGUSER=postgres -e PGPASSWORD=openstreetmap \
 	  -e WORK_DIR=/tmp/gpxdump -e PLANET_DIR=/data/gps -e OSMREP_DATA_DIR=/data \
-	  -e OSMREP="bundle exec bin/osmrep" osmrep bash script/gpx-dump
+	  -e OSMREP="bundle exec bin/osmrep" osmrep bash /docker/gpx-dump.sh
 
 tokens: ## Print the OAuth tokens as JSON, one per user. REGEN=1 creates new ones
 	@$(if $(REGEN),$(COMPOSE) exec -T web bundle exec rails runner /scripts/generate_token.rb >/dev/null,true)
