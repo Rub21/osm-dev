@@ -1,5 +1,6 @@
 # Optional consumer side, the future gps-tiles: a PostGIS database filled from a
-# traces replication feed with osmrep. make up TILER=1
+# traces replication feed with osmrep, and Martin serving it as vector tiles with its
+# viewer on http://127.0.0.1:3100/. make up TILER=1
 # By default it follows the feed of this instance (make up OSMREP=1 TILER=1). Set
 # TILER_FEED_URL and TILER_DUMP_URL in .env to follow another feed, for example the
 # one on the server.
@@ -39,6 +40,15 @@ services:
       options:
         max-size: "20m"
         max-file: "3"
+
+  tiler-martin:
+    container_name: ${DOCKER_NAME_PREFIX:-osmdev}-tiler-martin
+    image: ghcr.io/maplibre/martin:1.16.1
+    command: ["--webui", "enable-for-all", "postgres://postgres:openstreetmap@tiler-db:5432/gpstiles"]
+    ports:
+      - "127.0.0.1:${TILER_MARTIN_PORT:-3100}:3000"
+    depends_on:
+      - tiler-db
 
 volumes:
   tiler-db-data:

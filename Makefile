@@ -103,4 +103,4 @@ proxy-down: ## Server: stop the proxy
 lint: ## shellcheck the scripts and validate the compose files
 	shellcheck bin/*.sh docker/*.sh
 	docker compose -f compose.yaml -f compose.local.yaml -f compose.pgadmin.yaml -f compose.osmrep.yaml -f compose.tiler.yaml config -q
-	DOMAIN_NAME=lint.example.org PGADMIN_DOMAIN_NAME=pgadmin.lint.example.org REPLICATION_DOMAIN_NAME=replication.lint.example.org PGADMIN_PASSWORD=lint docker compose -f compose.yaml -f compose.proxy.yaml -f compose.pgadmin.yaml -f compose.pgadmin.proxy.yaml -f compose.osmrep.yaml -f compose.osmrep.proxy.yaml -f compose.tiler.yaml config -q
+	DOMAIN_NAME=lint.example.org PGADMIN_DOMAIN_NAME=pgadmin.lint.example.org REPLICATION_DOMAIN_NAME=replication.lint.example.org TILES_DOMAIN_NAME=tiles.lint.example.org PGADMIN_PASSWORD=lint docker compose -f compose.yaml -f compose.proxy.yaml -f compose.pgadmin.yaml -f compose.pgadmin.proxy.yaml -f compose.osmrep.yaml -f compose.osmrep.proxy.yaml -f compose.tiler.yaml -f compose.tiler.proxy.yaml config -q
