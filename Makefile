@@ -12,11 +12,14 @@ else
   ifdef OSMREP
     COMPOSE_FILES += -f compose.osmrep.yaml
   endif
+  ifdef TILER
+    COMPOSE_FILES += -f compose.tiler.yaml
+  endif
   COMPOSE := docker compose $(COMPOSE_FILES)
   SLUG := osmdev
 endif
 
-.PHONY: help setup up down clean logs shell console psql test tokens app apps restore backup proxy-up proxy-down lint osmrep gpx-dump
+.PHONY: help setup up down clean logs shell console psql test tokens app apps restore backup proxy-up proxy-down lint osmrep tiler-psql gpx-dump
 
 help: ## Show this help
 	@grep -hE '^[a-zA-Z_-]+:.*## ' $(MAKEFILE_LIST) \
@@ -38,9 +41,9 @@ endif
 down: ## Stop, keep the data. Also removes pgAdmin when it was started with PGADMIN=1
 	$(COMPOSE) down --remove-orphans
 
-clean: ## Stop and delete the volumes, pgAdmin and osmrep included
+clean: ## Stop and delete the volumes, pgAdmin, osmrep and tiler included
 	$(COMPOSE) down -v --remove-orphans
-	docker volume rm -f $(SLUG)_pgadmin-data $(SLUG)_osmrep-bundle $(SLUG)_replication-data >/dev/null
+	docker volume rm -f $(SLUG)_pgadmin-data $(SLUG)_osmrep-bundle $(SLUG)_replication-data $(SLUG)_tiler-db-data >/dev/null
 
 logs: ## Follow the web logs
 	$(COMPOSE) logs -f web
@@ -59,6 +62,9 @@ test: ## Run the Rails tests on openstreetmap_test: make test [ARGS=test/jobs]
 
 osmrep: ## Run one osmrep command in the replication container: make osmrep OSMREP=1 ARGS="gpx dump -o /data/gpx-dump.osm.gz"
 	$(COMPOSE) exec osmrep bundle exec bin/osmrep $(ARGS)
+
+tiler-psql: ## psql on the consumer database gpstiles: make tiler-psql TILER=1
+	$(COMPOSE) exec tiler-db psql -U postgres -d gpstiles
 
 gpx-dump: ## Full traces dump like planetdump, served by nginx at /gps/: make gpx-dump OSMREP=1
 	$(COMPOSE) exec -e PGHOST=db -e PGUSER=postgres -e PGPASSWORD=openstreetmap \
@@ -96,5 +102,5 @@ proxy-down: ## Server: stop the proxy
 
 lint: ## shellcheck the scripts and validate the compose files
 	shellcheck bin/*.sh docker/*.sh
-	docker compose -f compose.yaml -f compose.local.yaml -f compose.pgadmin.yaml -f compose.osmrep.yaml config -q
-	DOMAIN_NAME=lint.example.org PGADMIN_DOMAIN_NAME=pgadmin.lint.example.org REPLICATION_DOMAIN_NAME=replication.lint.example.org PGADMIN_PASSWORD=lint docker compose -f compose.yaml -f compose.proxy.yaml -f compose.pgadmin.yaml -f compose.pgadmin.proxy.yaml -f compose.osmrep.yaml -f compose.osmrep.proxy.yaml config -q
+	docker compose -f compose.yaml -f compose.local.yaml -f compose.pgadmin.yaml -f compose.osmrep.yaml -f compose.tiler.yaml config -q
+	DOMAIN_NAME=lint.example.org PGADMIN_DOMAIN_NAME=pgadmin.lint.example.org REPLICATION_DOMAIN_NAME=replication.lint.example.org PGADMIN_PASSWORD=lint docker compose -f compose.yaml -f compose.proxy.yaml -f compose.pgadmin.yaml -f compose.pgadmin.proxy.yaml -f compose.osmrep.yaml -f compose.osmrep.proxy.yaml -f compose.tiler.yaml config -q

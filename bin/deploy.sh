@@ -43,10 +43,11 @@ export OSMREP_REPO="$INSTANCES_DIR/$BRANCH/osmrep"
 REPO_URL="${REPO:-$(envget REPO_URL)}"
 [[ -z "$REPO_URL" || "$REPO_URL" == *:* ]] || REPO_URL="https://github.com/$REPO_URL.git"
 
-# Extra compose files. PGADMIN=1 adds pgAdmin, OSMREP=1 adds the traces replication, same as in local mode.
+# Extra compose files. PGADMIN=1 adds pgAdmin, OSMREP=1 the traces replication, TILER=1 the consumer, same as in local mode.
 FILES="-f compose.yaml -f compose.proxy.yaml"
 [[ -n "${PGADMIN:-}" ]] && FILES="$FILES -f compose.pgadmin.yaml -f compose.pgadmin.proxy.yaml"
 [[ -n "${OSMREP:-}" ]] && FILES="$FILES -f compose.osmrep.yaml -f compose.osmrep.proxy.yaml"
+[[ -n "${TILER:-}" ]] && FILES="$FILES -f compose.tiler.yaml"
 
 # osmrep repo for OSMREP=1. OSMREP_REPO_URL in .env, default the GitHub repo, branch main.
 OSMREP_REPO_URL="${OSMREP_REPO_URL:-$(envget OSMREP_REPO_URL)}"
@@ -100,7 +101,7 @@ case "$CMD" in
       [[ -d "$BASE_REPO/.git" ]] || { echo "error: $BASE_REPO does not exist, run without NO_SYNC first" >&2; exit 1; }
     else
       sync_repo "$ARG"
-      [[ -n "${OSMREP:-}" ]] && sync_osmrep
+      [[ -n "${OSMREP:-}${TILER:-}" ]] && sync_osmrep
     fi
     dc up -d --build
     echo ""
@@ -111,6 +112,9 @@ case "$CMD" in
     fi
     if [[ "$FILES" == *compose.osmrep.yaml* ]]; then
       echo "    replication: https://$REPLICATION_DOMAIN_NAME/gpx/"
+    fi
+    if [[ "$FILES" == *compose.tiler.yaml* ]]; then
+      echo "    tiler: consumer database gpstiles, make tiler-psql BRANCH=$BRANCH TILER=1"
     fi
     ;;
   compose)

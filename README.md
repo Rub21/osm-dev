@@ -28,6 +28,7 @@ make down          # stop, keep the data
 make clean         # delete the volumes
 make up PGADMIN=1  # pgAdmin on http://localhost:5050 (admin@osm.org / admin)
 make up OSMREP=1   # traces replication with osmrep, files on http://localhost:8081/gpx/
+make up OSMREP=1 TILER=1  # plus a consumer PostGIS (gpstiles) that imports the dump and follows the feed
 make gpx-dump OSMREP=1  # full traces dump, gpx-planet-<date>.osm.bz2 on http://localhost:8081/gps/
 ```
 
@@ -95,6 +96,7 @@ gone while their rows stay in `active_storage_blobs` (broken images, 404 on down
 | `compose.local.yaml` / `compose.proxy.yaml` | local ports / Traefik and https |
 | `compose.pgadmin.yaml` | optional pgAdmin |
 | `compose.osmrep.yaml` | optional traces replication: [osmrep](https://github.com/Rub21/osmrep) every 60 s plus nginx for the files |
+| `compose.tiler.yaml` | optional consumer: PostGIS `gpstiles` filled by `osmrep gpx import` and `update` from a feed (`TILER_FEED_URL`, `TILER_DUMP_URL` in .env) |
 | `proxy/compose.yaml` | shared Traefik proxy |
 | `config/` | `database.yml`, `settings.local.yml`, `storage.yml` mounted into the app |
 | `bin/deploy.sh` | used by make with `BRANCH=`: git sync, then compose with the branch env |
