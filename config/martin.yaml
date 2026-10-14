@@ -1,0 +1,7 @@
+# Martin for the consumer database. Only the public schema: the postgis image
+# also ships the tiger geocoder tables and they would fill the catalog.
+postgres:
+  connection_string: postgres://postgres:openstreetmap@tiler-db:5432/gpstiles
+  auto_publish:
+    tables:
+      from_schemas: [public]

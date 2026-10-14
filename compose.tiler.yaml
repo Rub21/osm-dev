@@ -44,7 +44,9 @@ services:
   tiler-martin:
     container_name: ${DOCKER_NAME_PREFIX:-osmdev}-tiler-martin
     image: ghcr.io/maplibre/martin:1.16.1
-    command: ["--webui", "enable-for-all", "postgres://postgres:openstreetmap@tiler-db:5432/gpstiles"]
+    command: ["--webui", "enable-for-all", "--config", "/etc/martin.yaml"]
+    volumes:
+      - ./config/martin.yaml:/etc/martin.yaml:ro
     ports:
       - "127.0.0.1:${TILER_MARTIN_PORT:-3100}:3000"
     depends_on:
