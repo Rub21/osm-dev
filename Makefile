@@ -16,7 +16,7 @@ else
   SLUG := osmdev
 endif
 
-.PHONY: help setup up down clean logs shell console psql test tokens app apps restore backup proxy-up proxy-down lint osmrep
+.PHONY: help setup up down clean logs shell console psql test tokens app apps restore backup proxy-up proxy-down lint osmrep gpx-dump
 
 help: ## Show this help
 	@grep -hE '^[a-zA-Z_-]+:.*## ' $(MAKEFILE_LIST) \
@@ -59,6 +59,11 @@ test: ## Run the Rails tests on openstreetmap_test: make test [ARGS=test/jobs]
 
 osmrep: ## Run one osmrep command in the replication container: make osmrep OSMREP=1 ARGS="gpx dump -o /data/gpx-dump.osm.gz"
 	$(COMPOSE) exec osmrep bundle exec bin/osmrep $(ARGS)
+
+gpx-dump: ## Full traces dump like planetdump, served by nginx at /gps/: make gpx-dump OSMREP=1
+	$(COMPOSE) exec -e PGHOST=db -e PGUSER=postgres -e PGPASSWORD=openstreetmap \
+	  -e WORK_DIR=/tmp/gpxdump -e PLANET_DIR=/data/gps -e OSMREP_DATA_DIR=/data \
+	  -e OSMREP="bundle exec bin/osmrep" osmrep bash script/gpx-dump
 
 tokens: ## Print the OAuth tokens as JSON, one per user. REGEN=1 creates new ones
 	@$(if $(REGEN),$(COMPOSE) exec -T web bundle exec rails runner /scripts/generate_token.rb >/dev/null,true)

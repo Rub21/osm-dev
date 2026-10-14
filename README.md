@@ -28,6 +28,7 @@ make down          # stop, keep the data
 make clean         # delete the volumes
 make up PGADMIN=1  # pgAdmin on http://localhost:5050 (admin@osm.org / admin)
 make up OSMREP=1   # traces replication with osmrep, files on http://localhost:8081/gpx/
+make gpx-dump OSMREP=1  # full traces dump, gpx-planet-<date>.osm.gz on http://localhost:8081/gps/
 ```
 
 ## Server
@@ -49,6 +50,7 @@ make shell BRANCH=gpx-tracks        # also console, psql, backup, restore
 make tokens BRANCH=gpx-tracks 
 make up BRANCH=gpx-tracks PGADMIN=1                                  # also pgAdmin at https://pgadmin-gpx-tracks.<BASE_DOMAIN> (PGADMIN_PASSWORD in .env)
 make up BRANCH=gpx-soft-delete OSMREP=1                              # also osmrep, files at https://replication-gpx-soft-delete.<BASE_DOMAIN>/gpx/
+make gpx-dump BRANCH=gpx-soft-delete OSMREP=1                        # full dump at https://replication-gpx-soft-delete.<BASE_DOMAIN>/gps/
 ```
 
 `REPO` is `owner/repo` on GitHub or a full git URL. Needed for the first clone; later it
