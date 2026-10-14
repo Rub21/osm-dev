@@ -6,7 +6,7 @@ FROM ruby:${RUBY_VERSION}-slim
 RUN apt-get update \
  && apt-get install -y --no-install-recommends build-essential libpq-dev git ca-certificates curl gnupg postgresql-common \
  && /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y \
- && apt-get install -y --no-install-recommends postgresql-client-17 \
+ && apt-get install -y --no-install-recommends postgresql-client-17 pbzip2 \
  && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /osmrep
