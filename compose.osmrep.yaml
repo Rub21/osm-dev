@@ -1,6 +1,7 @@
 # Optional GPS traces replication with osmrep. make up OSMREP=1
 # osmrep runs `gpx replicate` every OSMREP_INTERVAL seconds against the db,
 # nginx serves the files on http://127.0.0.1:8081/gpx/ like planet.osm.org/replication/.
+# osmrep is built into the image from GitHub; OSMREP_REF in .env picks the branch or commit.
 services:
   osmrep:
     container_name: ${DOCKER_NAME_PREFIX:-osmdev}-osmrep
@@ -8,6 +9,9 @@ services:
     build:
       context: .
       dockerfile: docker/osmrep.Dockerfile
+      args:
+        OSMREP_REPO_URL: ${OSMREP_REPO_URL:-https://github.com/Rub21/osmrep.git}
+        OSMREP_REF: ${OSMREP_REF:-main}
     command: /docker/osmrep-loop.sh
     environment:
       OSMREP_DATABASE: postgres://postgres:openstreetmap@db:5432/openstreetmap
@@ -15,8 +19,6 @@ services:
       OSMREP_CONFIG: /etc/osmrep.yaml
       OSMREP_INTERVAL: ${OSMREP_INTERVAL:-60}
     volumes:
-      - ${OSMREP_REPO:-../osmrep}:/osmrep
-      - osmrep-bundle:/usr/local/bundle
       - replication-data:/data
       - ./docker:/docker:ro
       - ./config/osmrep.yaml:/etc/osmrep.yaml:ro
@@ -38,5 +40,4 @@ services:
       - ./config/replication-nginx.conf:/etc/nginx/conf.d/default.conf:ro
 
 volumes:
-  osmrep-bundle:
   replication-data:
