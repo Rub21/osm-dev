@@ -1,0 +1,18 @@
+# Server without osm-dev: Martin on https://TILES_DOMAIN_NAME through the
+# tiler Traefik (proxy/compose.yaml, port 8080) behind Cloudflare.
+# make proxy, then make up CF=1
+services:
+  martin:
+    ports: !reset []
+    networks:
+      - default
+      - tiler-proxy
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.${NAME:-gpxtiles}.rule=Host(`${TILES_DOMAIN_NAME}`)
+      - traefik.http.routers.${NAME:-gpxtiles}.entrypoints=web
+      - traefik.http.services.${NAME:-gpxtiles}.loadbalancer.server.port=3000
+
+networks:
+  tiler-proxy:
+    external: true

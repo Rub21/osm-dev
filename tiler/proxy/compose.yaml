@@ -1,0 +1,27 @@
+# Traefik for the tilers on a server without osm-dev: plain HTTP on
+# 127.0.0.1:8080. The host Apache sends gps-tiler-*.rub21.com here and
+# Cloudflare adds TLS in front. Each tiler joins the tiler-proxy network
+# with make up CF=1 and gets its own Host() router.
+# make proxy
+services:
+  traefik:
+    container_name: tiler-proxy
+    image: traefik:v3.7
+    restart: unless-stopped
+    command:
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --providers.docker.network=tiler-proxy
+      - --entrypoints.web.address=:8080
+      # Only Apache on this host reaches the port, keep its X-Forwarded-Proto: https
+      - --entrypoints.web.forwardedheaders.insecure=true
+    ports:
+      - "127.0.0.1:8080:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - tiler-proxy
+
+networks:
+  tiler-proxy:
+    name: tiler-proxy

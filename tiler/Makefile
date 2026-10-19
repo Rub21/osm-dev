@@ -5,9 +5,12 @@ COMPOSE_FILES := -f compose.yaml
 ifdef PROXY
   COMPOSE_FILES += -f compose.proxy.yaml
 endif
+ifdef CF
+  COMPOSE_FILES += -f compose.cloudflare.yaml
+endif
 COMPOSE := docker compose $(COMPOSE_FILES)
 
-.PHONY: help setup up down clean logs psql consumer lint
+.PHONY: help setup proxy apache up down clean logs psql consumer lint
 
 help: ## Show this help
 	@grep -hE '^[a-zA-Z_-]+:.*## ' $(MAKEFILE_LIST) \
@@ -15,6 +18,16 @@ help: ## Show this help
 
 setup: ## Create .env from .env.example when missing
 	@test -f .env || (cp .env.example .env && echo "created .env from .env.example")
+
+proxy: ## Start the tiler Traefik on port 8080 (servers without osm-dev, behind Cloudflare)
+	docker compose -f proxy/compose.yaml up -d
+
+apache: ## Install the host Apache vhost for gps-tiler-*.rub21.com (re-run if Chef removes it)
+	cp proxy/apache-gps-tiler.conf /etc/apache2/sites-available/gps-tiler.conf
+	a2enmod -q proxy proxy_http headers
+	a2ensite -q gps-tiler
+	apache2ctl configtest
+	systemctl reload apache2
 
 up: setup ## Build and start: database, consumer and Martin
 	$(COMPOSE) up -d --build
