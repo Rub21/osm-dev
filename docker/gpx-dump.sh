@@ -3,11 +3,10 @@
 # Runs inside the osmrep container: make gpx-dump OSMREP=1
 #
 # 1. pg_dump of the gpx tables into one .dmp file (custom format, data only)
-# 2. pg_restore of that file into an empty scratch database
-# 3. osmrep gpx dump reads the scratch database and writes the XML
-# 4. md5, "latest" link and optional copy to S3, like planet-notes-dump
+# 2. osmrep gpx dump reads that file and writes the XML, no database needed
+# 3. md5, "latest" link and optional copy to S3, like planet-notes-dump
 #
-# The dump is .osm.bz2 like the planet and notes dumps (pbzip2 when installed).
+# The dump is .osm.bz2 like the planet and notes dumps.
 #
 # The production database is only touched in step 1. Settings come from the
 # environment, the defaults are the paths used on the planet server.
@@ -26,13 +25,13 @@ if [[ -z "${PGHOST:-}" ]]; then
 fi
 : "${PGHOST:?set PGHOST, PGUSER and PGPASSWORD, or database in ${OSMREP_CONFIG}}"
 SOURCE_DB="${SOURCE_DB:-openstreetmap}"
-SCRATCH_DB="${SCRATCH_DB:-gpx_dump}"
 WORK_DIR="${WORK_DIR:-/store/planetdump}"
 PLANET_DIR="${PLANET_DIR:-/store/planet/gps}"
 S3_DIR="${S3_DIR:-}"                       # for example s3://osm-planet-eu-central-1/gps/osm
 AWS="${AWS:-/opt/awscli/v2/current/bin/aws}"
 AWS_PROFILE_NAME="${AWS_PROFILE_NAME:-osm-pds-upload}"
 MIN_SIZE="${MIN_SIZE:-1000}"               # bytes, the dump is refused when smaller
+JOBS="${JOBS:-$(nproc)}"                   # osmrep worker processes
 OSMREP="${OSMREP:-osmrep}"             # command, may have arguments: "bundle exec bin/osmrep"
 OSMREP_DATA_DIR="${OSMREP_DATA_DIR:-/store/planet/replication}"  # to record the feed sequence
 
@@ -51,24 +50,23 @@ trap 'rm -f "$lock"' EXIT
 
 mkdir -p "$WORK_DIR" "${PLANET_DIR}/${year}"
 
-echo "==> 1/4 pg_dump of the gpx tables from ${SOURCE_DB} -> ${dump_file}"
+# The sequence of the feed before the pg_dump, so a consumer that loads the
+# dump and then follows the feed from this sequence misses nothing.
+state="${OSMREP_DATA_DIR}/gpx/state.txt"
+sequence=$(grep -oE '^sequenceNumber=[0-9]+' "$state" 2>/dev/null | cut -d= -f2 || true)
+sequence="${sequence:-0}"
+
+echo "==> 1/3 pg_dump of the gpx tables from ${SOURCE_DB} -> ${dump_file} (feed sequence ${sequence})"
 rm -f "$dump_file"
 pg_dump --format=custom --data-only \
   --table=users --table=gpx_files --table=gpx_file_tags --table=gpx_tracks \
   --file="$dump_file" "$SOURCE_DB"
 
-echo "==> 2/4 restore into the scratch database ${SCRATCH_DB}"
-dropdb --if-exists "$SCRATCH_DB"
-createdb "$SCRATCH_DB"
-pg_dump --schema-only "$SOURCE_DB" | psql --quiet --set ON_ERROR_STOP=1 "$SCRATCH_DB" >/dev/null
-pg_restore --data-only --dbname="$SCRATCH_DB" "$dump_file"
-
-echo "==> 3/4 osmrep gpx dump"
+echo "==> 2/3 osmrep gpx dump with ${JOBS} workers"
 read -ra osmrep_cmd <<< "$OSMREP"
 out="${PLANET_DIR}/${year}/.${name}"
-OSMREP_DATABASE="postgres:///${SCRATCH_DB}" \
-OSMREP_DATA_DIR="$OSMREP_DATA_DIR" \
-  "${osmrep_cmd[@]}" gpx dump -q -c "$OSMREP_CONFIG" -o "$out"
+"${osmrep_cmd[@]}" gpx dump -c "$OSMREP_CONFIG" --from "$dump_file" -o "$out" \
+  --sequence "$sequence" --jobs "$JOBS" --work-dir "$WORK_DIR"
 
 size=$(wc -c < "$out" | tr -d " ")
 if (( size < MIN_SIZE )); then
@@ -79,7 +77,7 @@ cd "${PLANET_DIR}/${year}"
 mv ".${name}" "$name"
 md5sum "$name" > "${name}.md5"
 
-echo "==> 4/4 publish"
+echo "==> 3/3 publish"
 cd "$PLANET_DIR"
 ln -fs "${year}/${name}" gpx-planet-latest.osm.bz2
 sed -e "s/${name}/gpx-planet-latest.osm.bz2/" "${year}/${name}.md5" > gpx-planet-latest.osm.bz2.md5
@@ -88,6 +86,5 @@ if [[ -n "$S3_DIR" ]]; then
   "$AWS" --profile "$AWS_PROFILE_NAME" s3 cp --storage-class INTELLIGENT_TIERING --no-progress "${year}/${name}" "${S3_DIR}/${year}/${name}"
 fi
 
-dropdb "$SCRATCH_DB"
 rm -f "$dump_file"
 echo "==> done: ${PLANET_DIR}/${year}/${name} (${size} bytes)"
