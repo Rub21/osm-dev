@@ -33,7 +33,6 @@ AWS_PROFILE_NAME="${AWS_PROFILE_NAME:-osm-pds-upload}"
 MIN_SIZE="${MIN_SIZE:-1000}"               # bytes, the dump is refused when smaller
 JOBS="${JOBS:-$(nproc)}"                   # osmrep worker processes
 OSMREP="${OSMREP:-osmrep}"             # command, may have arguments: "bundle exec bin/osmrep"
-OSMREP_DATA_DIR="${OSMREP_DATA_DIR:-/store/planet/replication}"  # to record the feed sequence
 
 year=$(date +%Y)
 date=$(date +%y%m%d)
@@ -50,13 +49,7 @@ trap 'rm -f "$lock"' EXIT
 
 mkdir -p "$WORK_DIR" "${PLANET_DIR}/${year}"
 
-# The sequence of the feed before the pg_dump, so a consumer that loads the
-# dump and then follows the feed from this sequence misses nothing.
-state="${OSMREP_DATA_DIR}/gpx/state.txt"
-sequence=$(grep -oE '^sequenceNumber=[0-9]+' "$state" 2>/dev/null | cut -d= -f2 || true)
-sequence="${sequence:-0}"
-
-echo "==> 1/3 pg_dump of the gpx tables from ${SOURCE_DB} -> ${dump_file} (feed sequence ${sequence})"
+echo "==> 1/3 pg_dump of the gpx tables from ${SOURCE_DB} -> ${dump_file}"
 rm -f "$dump_file"
 pg_dump --format=custom --data-only \
   --table=users --table=gpx_files --table=gpx_file_tags --table=gpx_tracks \
@@ -65,8 +58,7 @@ pg_dump --format=custom --data-only \
 echo "==> 2/3 osmrep gpx dump with ${JOBS} workers"
 read -ra osmrep_cmd <<< "$OSMREP"
 out="${PLANET_DIR}/${year}/.${name}"
-"${osmrep_cmd[@]}" gpx dump -c "$OSMREP_CONFIG" --from "$dump_file" -o "$out" \
-  --sequence "$sequence" --jobs "$JOBS" --work-dir "$WORK_DIR"
+"${osmrep_cmd[@]}" gpx dump -c "$OSMREP_CONFIG" --from "$dump_file" -o "$out" --jobs "$JOBS" --work-dir "$WORK_DIR"
 
 size=$(wc -c < "$out" | tr -d " ")
 if (( size < MIN_SIZE )); then
