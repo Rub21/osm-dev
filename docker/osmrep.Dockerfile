@@ -14,4 +14,5 @@ ARG OSMREP_REPO_URL=https://github.com/Rub21/osmrep.git
 ARG OSMREP_REF=main
 RUN git clone --depth 1 --branch "$OSMREP_REF" "$OSMREP_REPO_URL" /osmrep
 WORKDIR /osmrep
-RUN BUNDLE_WITHOUT=development:test bundle install --quiet
+ENV BUNDLE_WITHOUT=development:test
+RUN bundle install --quiet
