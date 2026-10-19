@@ -29,6 +29,7 @@ make clean         # delete the volumes
 make up PGADMIN=1  # pgAdmin on http://localhost:5050 (admin@osm.org / admin)
 make up OSMREP=1   # traces replication with osmrep, files on http://localhost:8081/gpx/
 make gpx-dump OSMREP=1  # full traces dump, gpx-planet-<date>.osm.bz2 on http://localhost:8081/gps/
+cd tiler && make up     # the GPS tiles prototype: PostGIS fed from a feed and a dump, Martin on http://127.0.0.1:3100/
 ```
 
 ## Server
@@ -95,6 +96,7 @@ gone while their rows stay in `active_storage_blobs` (broken images, 404 on down
 | `compose.local.yaml` / `compose.proxy.yaml` | local ports / Traefik and https |
 | `compose.pgadmin.yaml` | optional pgAdmin |
 | `compose.osmrep.yaml` | optional traces replication: [osmrep](https://github.com/Rub21/osmrep) every 60 s plus nginx for the files. osmrep is built into the image from GitHub, `OSMREP_REF` in .env picks the branch |
+| `tiler/` | the GPS tiles prototype, a separate compose project: [gpxsync](https://github.com/Rub21/gpxsync) loads a dump and follows a feed into PostGIS, Martin serves the tiles. `FEED_URL` and `DUMP_URL` in `tiler/.env` point to an instance, on this server or another |
 | `proxy/compose.yaml` | shared Traefik proxy |
 | `config/` | `database.yml`, `settings.local.yml`, `storage.yml` mounted into the app |
 | `bin/deploy.sh` | used by make with `BRANCH=`: git sync, then compose with the branch env |

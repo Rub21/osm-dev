@@ -1,0 +1,56 @@
+# The GPS tiles prototype: a PostGIS database filled from the traces dump and
+# replication feed of an osm-dev instance, and Martin serving it as vector
+# tiles with its viewer on http://127.0.0.1:3100/.
+# FEED_URL and DUMP_URL in .env say which instance to follow.
+services:
+  db:
+    container_name: ${NAME:-gpxtiles}-db
+    image: postgis/postgis:17-3.5
+    platform: linux/amd64  # postgis has no arm64 build
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: gpstiles
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: openstreetmap
+    volumes:
+      - db-data:/var/lib/postgresql/data
+
+  consumer:
+    container_name: ${NAME:-gpxtiles}-consumer
+    image: ${NAME:-gpxtiles}-consumer
+    build:
+      context: .
+      dockerfile: docker/consumer.Dockerfile
+      args:
+        GPXSYNC_REF: ${GPXSYNC_REF:-main}
+    command: /docker/consumer-loop.sh
+    restart: unless-stopped
+    environment:
+      GPXSYNC_DATABASE: postgres://postgres:openstreetmap@db:5432/gpstiles
+      GPXSYNC_FEED_URL: ${FEED_URL:-https://replication-gpx-soft-delete-dev.rub21.com/gpx/}
+      DUMP_URL: ${DUMP_URL:-https://replication-gpx-soft-delete-dev.rub21.com/gps/gpx-planet-latest.osm.bz2}
+      INTERVAL: ${INTERVAL:-60}
+    volumes:
+      - ./docker:/docker:ro
+    depends_on:
+      - db
+    logging:
+      driver: json-file
+      options:
+        max-size: "20m"
+        max-file: "3"
+
+  martin:
+    container_name: ${NAME:-gpxtiles}-martin
+    image: ghcr.io/maplibre/martin:1.16.1
+    restart: unless-stopped  # fails to start until the consumer has created the tables
+    command: ["--webui", "enable-for-all", "--config", "/etc/martin.yaml"]
+    volumes:
+      - ./config/martin.yaml:/etc/martin.yaml:ro
+    ports:
+      - "127.0.0.1:${MARTIN_PORT:-3100}:3000"
+    depends_on:
+      - db
+
+volumes:
+  db-data:

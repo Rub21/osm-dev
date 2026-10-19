@@ -1,0 +1,15 @@
+# One source, trace_segments on its 2D column geom2d: ST_AsMVTGeom cannot
+# clip the ZM geometry. Nothing else is published.
+postgres:
+  connection_string: postgres://postgres:openstreetmap@db:5432/gpstiles
+  auto_publish: false
+  tables:
+    trace_segments:
+      schema: public
+      table: trace_segments
+      srid: 4326
+      geometry_column: geom2d
+      geometry_type: GEOMETRY
+      properties:
+        gpx_id: int8
+        trackid: int4

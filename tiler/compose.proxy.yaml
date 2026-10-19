@@ -1,0 +1,19 @@
+# Server: Martin on https://TILES_DOMAIN_NAME through the Traefik proxy of osm-dev.
+# make up PROXY=1
+services:
+  martin:
+    ports: !reset []
+    networks:
+      - default
+      - osm-proxy
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=osm-proxy
+      - traefik.http.routers.${NAME:-gpxtiles}.rule=Host(`${TILES_DOMAIN_NAME}`)
+      - traefik.http.routers.${NAME:-gpxtiles}.entrypoints=websecure
+      - traefik.http.routers.${NAME:-gpxtiles}.tls.certresolver=le
+      - traefik.http.services.${NAME:-gpxtiles}.loadbalancer.server.port=3000
+
+networks:
+  osm-proxy:
+    external: true

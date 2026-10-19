@@ -94,7 +94,8 @@ proxy-up: ## Server: start the shared Traefik proxy
 proxy-down: ## Server: stop the proxy
 	docker compose --env-file .env -f proxy/compose.yaml down
 
-lint: ## shellcheck the scripts and validate the compose files
-	shellcheck bin/*.sh docker/*.sh
+lint: ## shellcheck the scripts and validate the compose files, the tiler included
+	shellcheck bin/*.sh docker/*.sh tiler/docker/*.sh
+	$(MAKE) -C tiler lint
 	docker compose -f compose.yaml -f compose.local.yaml -f compose.pgadmin.yaml -f compose.osmrep.yaml config -q
 	DOMAIN_NAME=lint.example.org PGADMIN_DOMAIN_NAME=pgadmin.lint.example.org REPLICATION_DOMAIN_NAME=replication.lint.example.org PGADMIN_PASSWORD=lint docker compose -f compose.yaml -f compose.proxy.yaml -f compose.pgadmin.yaml -f compose.pgadmin.proxy.yaml -f compose.osmrep.yaml -f compose.osmrep.proxy.yaml config -q
