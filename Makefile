@@ -12,11 +12,14 @@ else
   ifdef OSMREP
     COMPOSE_FILES += -f compose.osmrep.yaml
   endif
+  ifdef PLANETDUMP
+    COMPOSE_FILES += -f compose.planetdump.yaml
+  endif
   COMPOSE := docker compose $(COMPOSE_FILES)
   SLUG := osmdev
 endif
 
-.PHONY: help setup up down clean logs shell console psql test tokens app apps restore backup proxy-up proxy-down lint osmrep gpx-dump
+.PHONY: help setup up down clean logs shell console psql test tokens app apps restore backup proxy-up proxy-down lint osmrep planet-dump
 
 help: ## Show this help
 	@grep -hE '^[a-zA-Z_-]+:.*## ' $(MAKEFILE_LIST) \
@@ -60,10 +63,8 @@ test: ## Run the Rails tests on openstreetmap_test: make test [ARGS=test/jobs]
 osmrep: ## Run one osmrep command in the replication container: make osmrep OSMREP=1 ARGS="gpx replicate"
 	$(COMPOSE) exec osmrep bundle exec bin/osmrep $(ARGS)
 
-gpx-dump: ## Full traces dump like planetdump, served by nginx at /gps/: make gpx-dump OSMREP=1
-	$(COMPOSE) exec -e PGHOST=db -e PGUSER=postgres -e PGPASSWORD=openstreetmap \
-	  -e WORK_DIR=/tmp/gpxdump -e PLANET_DIR=/data/gps \
-	  -e OSMREP="bundle exec bin/osmrep" osmrep bash /docker/gpx-dump.sh
+planet-dump: ## GPS traces dump with planet-dump-ng: make planet-dump PLANETDUMP=1 [VISIBILITY="identifiable trackable"]
+	$(COMPOSE) exec $(if $(VISIBILITY),-e VISIBILITY="$(VISIBILITY)") planetdump bash /docker/planet-dump-ng.sh
 
 tokens: ## Print the OAuth tokens as JSON, one per user. REGEN=1 creates new ones
 	@$(if $(REGEN),$(COMPOSE) exec -T web bundle exec rails runner /scripts/generate_token.rb >/dev/null,true)
@@ -97,5 +98,5 @@ proxy-down: ## Server: stop the proxy
 lint: ## shellcheck the scripts and validate the compose files, the tiler included
 	shellcheck bin/*.sh docker/*.sh tiler/docker/*.sh
 	$(MAKE) -C tiler lint
-	docker compose -f compose.yaml -f compose.local.yaml -f compose.pgadmin.yaml -f compose.osmrep.yaml config -q
+	docker compose -f compose.yaml -f compose.local.yaml -f compose.pgadmin.yaml -f compose.osmrep.yaml -f compose.planetdump.yaml config -q
 	DOMAIN_NAME=lint.example.org PGADMIN_DOMAIN_NAME=pgadmin.lint.example.org REPLICATION_DOMAIN_NAME=replication.lint.example.org PGADMIN_PASSWORD=lint docker compose -f compose.yaml -f compose.proxy.yaml -f compose.pgadmin.yaml -f compose.pgadmin.proxy.yaml -f compose.osmrep.yaml -f compose.osmrep.proxy.yaml config -q

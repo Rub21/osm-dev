@@ -1,0 +1,26 @@
+# Optional GPS traces dump with planet-dump-ng. make up PLANETDUMP=1, then make planet-dump PLANETDUMP=1
+# planet-dump-ng is built into the image from GitHub; PLANET_DUMP_NG_REF in .env picks the branch or commit.
+# Files go to the replication-data volume, under /gps/. With OSMREP=1 nginx serves them on :8081/gps/.
+services:
+  planetdump:
+    container_name: ${DOCKER_NAME_PREFIX:-osmdev}-planetdump
+    image: ${DOCKER_NAME_PREFIX:-osmdev}-planetdump
+    build:
+      context: .
+      dockerfile: docker/planet-dump-ng.Dockerfile
+      args:
+        PLANET_DUMP_NG_REPO_URL: ${PLANET_DUMP_NG_REPO_URL:-https://github.com/Rub21/planet-dump-ng.git}
+        PLANET_DUMP_NG_REF: ${PLANET_DUMP_NG_REF:-gpx-dump}
+    command: sleep infinity
+    environment:
+      PGHOST: db
+      PGUSER: postgres
+      PGPASSWORD: openstreetmap
+    volumes:
+      - replication-data:/data
+      - ./docker:/docker:ro
+    depends_on:
+      - db
+
+volumes:
+  replication-data:

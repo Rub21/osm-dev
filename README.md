@@ -28,7 +28,8 @@ make down          # stop, keep the data
 make clean         # delete the volumes
 make up PGADMIN=1  # pgAdmin on http://localhost:5050 (admin@osm.org / admin)
 make up OSMREP=1   # traces replication with osmrep, files on http://localhost:8081/gpx/
-make gpx-dump OSMREP=1  # full traces dump, gpx-planet-<date>.osm.bz2 on http://localhost:8081/gps/
+make up PLANETDUMP=1     # planet-dump-ng built from PLANET_DUMP_NG_REF (default gpx-dump)
+make planet-dump PLANETDUMP=1 OSMREP=1  # GPS dump with planet-dump-ng, gpx-<date>.gpx.bz2 on http://localhost:8081/gps/
 cd tiler && make up     # the GPS tiles prototype: PostGIS fed from a feed and a dump, Martin on http://127.0.0.1:3100/
 ```
 
@@ -51,7 +52,7 @@ make shell BRANCH=gpx-tracks        # also console, psql, backup, restore
 make tokens BRANCH=gpx-tracks 
 make up BRANCH=gpx-tracks PGADMIN=1                                  # also pgAdmin at https://pgadmin-gpx-tracks.<BASE_DOMAIN> (PGADMIN_PASSWORD in .env)
 make up BRANCH=gpx-soft-delete OSMREP=1                              # also osmrep, files at https://replication-gpx-soft-delete.<BASE_DOMAIN>/gpx/
-make gpx-dump BRANCH=gpx-soft-delete OSMREP=1                        # full dump at https://replication-gpx-soft-delete.<BASE_DOMAIN>/gps/
+make planet-dump BRANCH=gpx-soft-delete OSMREP=1 PLANETDUMP=1        # GPS dump at https://replication-gpx-soft-delete.<BASE_DOMAIN>/gps/
 ```
 
 `REPO` is `owner/repo` on GitHub or a full git URL. Needed for the first clone; later it

@@ -42,10 +42,11 @@ export REPLICATION_DOMAIN_NAME="replication-${SLUG}.${BASE_DOMAIN}"
 REPO_URL="${REPO:-$(envget REPO_URL)}"
 [[ -z "$REPO_URL" || "$REPO_URL" == *:* ]] || REPO_URL="https://github.com/$REPO_URL.git"
 
-# Extra compose files. PGADMIN=1 adds pgAdmin, OSMREP=1 the traces replication, same as in local mode.
+# Extra compose files. PGADMIN=1 adds pgAdmin, OSMREP=1 the traces replication, PLANETDUMP=1 planet-dump-ng, same as in local mode.
 FILES="-f compose.yaml -f compose.proxy.yaml"
 [[ -n "${PGADMIN:-}" ]] && FILES="$FILES -f compose.pgadmin.yaml -f compose.pgadmin.proxy.yaml"
 [[ -n "${OSMREP:-}" ]] && FILES="$FILES -f compose.osmrep.yaml -f compose.osmrep.proxy.yaml"
+[[ -n "${PLANETDUMP:-}" ]] && FILES="$FILES -f compose.planetdump.yaml"
 
 dc() {
   # shellcheck disable=SC2086
