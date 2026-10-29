@@ -58,7 +58,7 @@ test: ## Run the Rails tests on openstreetmap_test: make test [ARGS=test/jobs]
 	$(COMPOSE) exec -e RAILS_ENV=test web sh -c 'unset DATABASE_URL; bundle exec rails db:create db:test:prepare >/dev/null 2>&1; bundle exec rails test $(ARGS)'
 
 planet-dump: ## GPS traces dump with planet-dump-ng: make planet-dump PLANETDUMP=1 [VISIBILITY="identifiable trackable"]
-	$(COMPOSE) exec $(if $(VISIBILITY),-e VISIBILITY="$(VISIBILITY)") planetdump bash /docker/planet-dump-ng.sh
+	$(COMPOSE) run --rm $(if $(VISIBILITY),-e VISIBILITY="$(VISIBILITY)") planetdump bash /docker/planet-dump-ng.sh
 
 tokens: ## Print the OAuth tokens as JSON, one per user. REGEN=1 creates new ones
 	@$(if $(REGEN),$(COMPOSE) exec -T web bundle exec rails runner /scripts/generate_token.rb >/dev/null,true)
