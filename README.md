@@ -27,9 +27,8 @@ make tokens        # OAuth tokens as JSON: make tokens | jq -r .admin   (REGEN=1
 make down          # stop, keep the data
 make clean         # delete the volumes
 make up PGADMIN=1  # pgAdmin on http://localhost:5050 (admin@osm.org / admin)
-make up OSMREP=1   # traces replication with osmrep, files on http://localhost:8081/gpx/
 make up PLANETDUMP=1     # planet-dump-ng built from PLANET_DUMP_NG_REF (default gpx-dump)
-make planet-dump PLANETDUMP=1 OSMREP=1  # GPS dump with planet-dump-ng, gpx-<date>.gpx.bz2 on http://localhost:8081/gps/
+make planet-dump PLANETDUMP=1  # GPS dump with planet-dump-ng, gpx-<date>.gpx.bz2 on http://localhost:8081/gps/
 cd tiler && make up     # the GPS tiles prototype: PostGIS fed from a feed and a dump, Martin on http://127.0.0.1:3100/
 ```
 
@@ -51,8 +50,8 @@ make clean BRANCH=gpx-tracks                                          # delete t
 make shell BRANCH=gpx-tracks        # also console, psql, backup, restore
 make tokens BRANCH=gpx-tracks 
 make up BRANCH=gpx-tracks PGADMIN=1                                  # also pgAdmin at https://pgadmin-gpx-tracks.<BASE_DOMAIN> (PGADMIN_PASSWORD in .env)
-make up BRANCH=gpx-soft-delete OSMREP=1                              # also osmrep, files at https://replication-gpx-soft-delete.<BASE_DOMAIN>/gpx/
-make planet-dump BRANCH=gpx-soft-delete OSMREP=1 PLANETDUMP=1        # GPS dump at https://replication-gpx-soft-delete.<BASE_DOMAIN>/gps/
+make up BRANCH=gpx-soft-delete PLANETDUMP=1                          # also planet-dump-ng, files at https://planet-gpx-soft-delete.<BASE_DOMAIN>/gps/
+make planet-dump BRANCH=gpx-soft-delete PLANETDUMP=1                 # GPS dump at https://planet-gpx-soft-delete.<BASE_DOMAIN>/gps/
 ```
 
 `REPO` is `owner/repo` on GitHub or a full git URL. Needed for the first clone; later it
@@ -96,7 +95,7 @@ gone while their rows stay in `active_storage_blobs` (broken images, 404 on down
 | `compose.yaml` | web, db, memcached, db_restore |
 | `compose.local.yaml` / `compose.proxy.yaml` | local ports / Traefik and https |
 | `compose.pgadmin.yaml` | optional pgAdmin |
-| `compose.osmrep.yaml` | optional traces replication: [osmrep](https://github.com/Rub21/osmrep) every 60 s plus nginx for the files. osmrep is built into the image from GitHub, `OSMREP_REF` in .env picks the branch |
+| `compose.planetdump.yaml` | optional GPS dump: [planet-dump-ng](https://github.com/Rub21/planet-dump-ng) plus nginx for the files. Built from GitHub, `PLANET_DUMP_NG_REF` in .env picks the branch |
 | `tiler/` | the GPS tiles prototype, a separate compose project: [gpxsync](https://github.com/Rub21/gpxsync) loads a dump and follows a feed into PostGIS, Martin serves the tiles. `FEED_URL` and `DUMP_URL` in `tiler/.env` point to an instance, on this server or another |
 | `proxy/compose.yaml` | shared Traefik proxy |
 | `config/` | `database.yml`, `settings.local.yml`, `storage.yml` mounted into the app |

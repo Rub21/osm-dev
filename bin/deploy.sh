@@ -36,17 +36,16 @@ export DOCKER_NAME_PREFIX="$SLUG"
 export COMPOSE_PROJECT_NAME="$SLUG"
 export DOMAIN_NAME="${SLUG}.${BASE_DOMAIN}"
 export PGADMIN_DOMAIN_NAME="pgadmin-${SLUG}.${BASE_DOMAIN}"
-export REPLICATION_DOMAIN_NAME="replication-${SLUG}.${BASE_DOMAIN}"
+export PLANET_DOMAIN_NAME="planet-${SLUG}.${BASE_DOMAIN}"
 
 # REPO on the command line, or REPO_URL in .env. "owner/repo" means GitHub.
 REPO_URL="${REPO:-$(envget REPO_URL)}"
 [[ -z "$REPO_URL" || "$REPO_URL" == *:* ]] || REPO_URL="https://github.com/$REPO_URL.git"
 
-# Extra compose files. PGADMIN=1 adds pgAdmin, OSMREP=1 the traces replication, PLANETDUMP=1 planet-dump-ng, same as in local mode.
+# Extra compose files. PGADMIN=1 adds pgAdmin, PLANETDUMP=1 planet-dump-ng, same as in local mode.
 FILES="-f compose.yaml -f compose.proxy.yaml"
 [[ -n "${PGADMIN:-}" ]] && FILES="$FILES -f compose.pgadmin.yaml -f compose.pgadmin.proxy.yaml"
-[[ -n "${OSMREP:-}" ]] && FILES="$FILES -f compose.osmrep.yaml -f compose.osmrep.proxy.yaml"
-[[ -n "${PLANETDUMP:-}" ]] && FILES="$FILES -f compose.planetdump.yaml"
+[[ -n "${PLANETDUMP:-}" ]] && FILES="$FILES -f compose.planetdump.yaml -f compose.planetdump.proxy.yaml"
 
 dc() {
   # shellcheck disable=SC2086
@@ -94,8 +93,8 @@ case "$CMD" in
       email="$(envget PGADMIN_EMAIL)"; email="${email:-admin@osm.org}"
       echo "    pgadmin: https://$PGADMIN_DOMAIN_NAME  ($email / $(envget PGADMIN_PASSWORD))"
     fi
-    if [[ "$FILES" == *compose.osmrep.yaml* ]]; then
-      echo "    replication: https://$REPLICATION_DOMAIN_NAME/gpx/"
+    if [[ "$FILES" == *compose.planetdump.yaml* ]]; then
+      echo "    planet: https://$PLANET_DOMAIN_NAME/gps/"
     fi
     ;;
   compose)

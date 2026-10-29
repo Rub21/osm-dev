@@ -1,0 +1,19 @@
+# Server: GPS dumps on https://planet-<slug>.<BASE_DOMAIN> through Traefik.
+# Loaded by bin/deploy.sh together with compose.planetdump.yaml when PLANETDUMP=1.
+services:
+  planet:
+    ports: !reset []
+    networks:
+      - default
+      - osm-proxy
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=osm-proxy
+      - traefik.http.routers.${DOCKER_NAME_PREFIX:-osmdev}-planet.rule=Host(`${PLANET_DOMAIN_NAME}`)
+      - traefik.http.routers.${DOCKER_NAME_PREFIX:-osmdev}-planet.entrypoints=websecure
+      - traefik.http.routers.${DOCKER_NAME_PREFIX:-osmdev}-planet.tls.certresolver=le
+      - traefik.http.services.${DOCKER_NAME_PREFIX:-osmdev}-planet.loadbalancer.server.port=80
+
+networks:
+  osm-proxy:
+    external: true

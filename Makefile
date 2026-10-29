@@ -9,9 +9,6 @@ else
   ifdef PGADMIN
     COMPOSE_FILES += -f compose.pgadmin.yaml
   endif
-  ifdef OSMREP
-    COMPOSE_FILES += -f compose.osmrep.yaml
-  endif
   ifdef PLANETDUMP
     COMPOSE_FILES += -f compose.planetdump.yaml
   endif
@@ -19,7 +16,7 @@ else
   SLUG := osmdev
 endif
 
-.PHONY: help setup up down clean logs shell console psql test tokens app apps restore backup proxy-up proxy-down lint osmrep planet-dump
+.PHONY: help setup up down clean logs shell console psql test tokens app apps restore backup proxy-up proxy-down lint planet-dump
 
 help: ## Show this help
 	@grep -hE '^[a-zA-Z_-]+:.*## ' $(MAKEFILE_LIST) \
@@ -41,9 +38,9 @@ endif
 down: ## Stop, keep the data. Also removes pgAdmin when it was started with PGADMIN=1
 	$(COMPOSE) down --remove-orphans
 
-clean: ## Stop and delete the volumes, pgAdmin and osmrep included
+clean: ## Stop and delete the volumes, pgAdmin and planet dumps included
 	$(COMPOSE) down -v --remove-orphans
-	docker volume rm -f $(SLUG)_pgadmin-data $(SLUG)_replication-data >/dev/null
+	docker volume rm -f $(SLUG)_pgadmin-data $(SLUG)_planet-data >/dev/null
 
 logs: ## Follow the web logs
 	$(COMPOSE) logs -f web
@@ -59,9 +56,6 @@ psql: ## psql on the database
 
 test: ## Run the Rails tests on openstreetmap_test: make test [ARGS=test/jobs]
 	$(COMPOSE) exec -e RAILS_ENV=test web sh -c 'unset DATABASE_URL; bundle exec rails db:create db:test:prepare >/dev/null 2>&1; bundle exec rails test $(ARGS)'
-
-osmrep: ## Run one osmrep command in the replication container: make osmrep OSMREP=1 ARGS="gpx replicate"
-	$(COMPOSE) exec osmrep bundle exec bin/osmrep $(ARGS)
 
 planet-dump: ## GPS traces dump with planet-dump-ng: make planet-dump PLANETDUMP=1 [VISIBILITY="identifiable trackable"]
 	$(COMPOSE) exec $(if $(VISIBILITY),-e VISIBILITY="$(VISIBILITY)") planetdump bash /docker/planet-dump-ng.sh
@@ -98,5 +92,5 @@ proxy-down: ## Server: stop the proxy
 lint: ## shellcheck the scripts and validate the compose files, the tiler included
 	shellcheck bin/*.sh docker/*.sh tiler/docker/*.sh
 	$(MAKE) -C tiler lint
-	docker compose -f compose.yaml -f compose.local.yaml -f compose.pgadmin.yaml -f compose.osmrep.yaml -f compose.planetdump.yaml config -q
-	DOMAIN_NAME=lint.example.org PGADMIN_DOMAIN_NAME=pgadmin.lint.example.org REPLICATION_DOMAIN_NAME=replication.lint.example.org PGADMIN_PASSWORD=lint docker compose -f compose.yaml -f compose.proxy.yaml -f compose.pgadmin.yaml -f compose.pgadmin.proxy.yaml -f compose.osmrep.yaml -f compose.osmrep.proxy.yaml config -q
+	docker compose -f compose.yaml -f compose.local.yaml -f compose.pgadmin.yaml -f compose.planetdump.yaml config -q
+	DOMAIN_NAME=lint.example.org PGADMIN_DOMAIN_NAME=pgadmin.lint.example.org PLANET_DOMAIN_NAME=planet.lint.example.org PGADMIN_PASSWORD=lint docker compose -f compose.yaml -f compose.proxy.yaml -f compose.pgadmin.yaml -f compose.pgadmin.proxy.yaml -f compose.planetdump.yaml -f compose.planetdump.proxy.yaml config -q
