@@ -10,7 +10,7 @@ ifdef CF
 endif
 COMPOSE := docker compose $(COMPOSE_FILES)
 
-.PHONY: help setup proxy apache up down clean logs psql consumer lint
+.PHONY: help setup proxy apache sql up down clean logs psql consumer lint
 
 help: ## Show this help
 	@grep -hE '^[a-zA-Z_-]+:.*## ' $(MAKEFILE_LIST) \
@@ -22,12 +22,17 @@ setup: ## Create .env from .env.example when missing
 proxy: ## Start the tiler Traefik on port 8080 (servers without osm-dev, behind Cloudflare)
 	docker compose -f proxy/compose.yaml up -d
 
-apache: ## Install the host Apache vhost for gps-tiler-*.rub21.com (re-run if Chef removes it)
+apache: ## Install the Apache vhost for gps-tiler-*.rub21.com and the /compare viewer (re-run if Chef removes it)
 	cp proxy/apache-gps-tiler.conf /etc/apache2/sites-available/gps-tiler.conf
+	mkdir -p /var/www/gps-tiler-viewer
+	cp viewer/index.html /var/www/gps-tiler-viewer/
 	a2enmod -q proxy proxy_http headers
 	a2ensite -q gps-tiler
 	apache2ctl configtest
 	systemctl reload apache2
+
+sql: ## Create or update the trace_dirs function (new databases get it on init)
+	$(COMPOSE) exec -T db psql -q -U postgres -d gpstiles -v ON_ERROR_STOP=1 < config/trace_dirs.sql
 
 up: setup ## Build and start: database, consumer and Martin
 	$(COMPOSE) up -d --build

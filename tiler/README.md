@@ -6,16 +6,25 @@ it as vector tiles. It is its own compose project: it only talks to the
 instance through the public URLs of the feed and the dump, so it runs the
 same on this server or on another one.
 
+
+## Deploy
+
 ```
-cd tiler
-make up            # database, consumer and Martin on http://127.0.0.1:3100/
-make logs          # the consumer: dump import, then one feed update per minute
-make psql          # the gpstiles database
+apt-get install -y docker.io docker-compose-v2 make
+git clone https://github.com/Rub21/osm-dev.git /root/osm-dev
+cd /root/osm-dev/tiler
+cp .env.example .env   # set NAME, TILES_DOMAIN_NAME
+make proxy
+make up CF=1
+make apache
 ```
 
-`FEED_URL` and `DUMP_URL` in `.env` say which instance to follow. On the
-server, `make up PROXY=1` publishes Martin at `TILES_DOMAIN_NAME` through the
-Traefik proxy of osm-dev.
+Update:
+
+```
+cd /root/osm-dev && git pull
+cd tiler && make up CF=1
+```
 
 ## Consumer
 

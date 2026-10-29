@@ -13,3 +13,11 @@ postgres:
       properties:
         gpx_id: int8
         trackid: int4
+  # trace_dirs(z, x, y) from config/trace_dirs.sql: segments with their
+  # direction (dir 0-31), to style like the gps-tile PNGs.
+  functions:
+    trace_dirs:
+      schema: public
+      function: trace_dirs
+      minzoom: 0
+      maxzoom: 22
