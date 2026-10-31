@@ -36,7 +36,7 @@ pg_dump --format=custom --data-only \
 echo "==> 2/3 planet-dump-ng -g (${VISIBILITY})"
 read -ra visibility <<< "$VISIBILITY"
 time planet-dump-ng -f gps.dmp -g "$name" --gpx-visibility "${visibility[@]}"
-xmllint --noout <(bzcat "$name")
+bzcat "$name" | xmllint --stream --noout -
 
 echo "==> 3/3 publish"
 mv "$name" "${PLANET_DIR}/${year}/${name}"
