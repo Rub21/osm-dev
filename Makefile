@@ -19,7 +19,7 @@ else
   SLUG := osmdev
 endif
 
-.PHONY: help setup up down clean logs shell console psql test tokens app apps restore backup proxy-up proxy-down lint planet-dump
+.PHONY: help setup up down clean logs shell console psql test tokens app apps restore backup proxy-up proxy-down lint planet-dump import-area
 
 help: ## Show this help
 	@grep -hE '^[a-zA-Z_-]+:.*## ' $(MAKEFILE_LIST) \
@@ -74,6 +74,11 @@ app: ## Create or replace one OAuth app: make app NAME=josm [SCOPES="..."] [REDI
 apps: ## Print the OAuth apps of the instance as JSON, with client id and secret (scripts/oauth-apps/apps.json says which ones exist)
 	@$(COMPOSE) exec -T web bundle exec rails runner /scripts/oauth-apps/create_app.rb >/dev/null
 	@cat .tokens/$(SLUG)-apps.json
+
+import-area: ## Copy an OSM or OHM area through the API: make import-area BBOX=s,w,n,e [SOURCE=ohm TARGET=https://... TOKEN=...] (local: mapper1)
+	@test -n "$(BBOX)" || (echo "BBOX=south,west,north,east is required" && exit 1)
+	TOKEN="$${TOKEN:-$$(python3 -c 'import json;print(json.load(open(".tokens/$(SLUG).json"))["mapper1"])')}" \
+	  scripts/import-area/import-area.sh "$${TARGET:-http://localhost:3000}" "$(BBOX)"
 
 restore: ## Restore a dump: make restore [BACKUP_FILE=/backups/x.dump]
 	$(COMPOSE) --profile restore run --rm db_restore
