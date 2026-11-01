@@ -12,6 +12,9 @@ else
   ifdef PLANETDUMP
     COMPOSE_FILES += -f compose.planetdump.yaml
   endif
+  ifdef EXTRA
+    COMPOSE_FILES += $(addprefix -f ,$(EXTRA))
+  endif
   COMPOSE := docker compose $(COMPOSE_FILES)
   SLUG := osmdev
 endif
