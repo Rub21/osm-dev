@@ -6,7 +6,7 @@ def upsert_user(name, password, roles)
   existing = User.find_by(:display_name => name)
 
   if existing
-    existing.update!(:terms_seen => true, :terms_agreed => Time.now.utc)
+    existing.update!(:terms_seen => true, :terms_agreed => Time.now.utc, :tou_agreed => Time.now.utc, :data_public => true)
     existing.activate! unless existing.active?
     puts "setup_users: '#{name}' refreshed (terms accepted, active)"
     return
@@ -17,6 +17,9 @@ def upsert_user(name, password, roles)
   u.pass_crypt_confirmation = password
   u.terms_seen = true
   u.terms_agreed = Time.now.utc
+  # Without these the API refuses to create changesets (403)
+  u.tou_agreed = Time.now.utc
+  u.data_public = true
   u.save!
   u.activate!
   roles.each { |role| u.roles.create(:role => role, :granter_id => u.id) }
