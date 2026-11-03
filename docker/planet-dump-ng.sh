@@ -2,7 +2,7 @@
 # GPS traces dump with planet-dump-ng, the same steps as the GPS part of
 # chef planetdump.erb. Runs inside the planetdump container: make planet-dump PLANETDUMP=1
 #
-# 1. pg_dump of users, gpx_files and gpx_tracks into gps.dmp
+# 1. pg_dump of gpx_files, gpx_file_tags and gpx_tracks into gps.dmp
 # 2. planet-dump-ng -g writes the GPX file
 # 3. md5 and "latest" link in PLANET_DIR
 set -euo pipefail
@@ -30,7 +30,7 @@ cd "$WORK_DIR"
 
 echo "==> 1/3 pg_dump of the gps tables from ${SOURCE_DB}"
 pg_dump --format=custom --data-only \
-  --table=users --table=gpx_files --table=gpx_tracks \
+  --table=gpx_files --table=gpx_file_tags --table=gpx_tracks \
   --file=gps.dmp "$SOURCE_DB"
 
 echo "==> 2/3 planet-dump-ng -g (${VISIBILITY})"
