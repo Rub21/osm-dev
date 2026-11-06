@@ -50,8 +50,8 @@ make clean BRANCH=gpx-tracks                                          # delete t
 make shell BRANCH=gpx-tracks        # also console, psql, backup, restore
 make tokens BRANCH=gpx-tracks 
 make up BRANCH=gpx-tracks PGADMIN=1                                  # also pgAdmin at https://pgadmin-gpx-tracks.<BASE_DOMAIN> (PGADMIN_PASSWORD in .env)
-make up BRANCH=gpx-soft-delete PLANETDUMP=1                          # also planet-dump-ng, files at https://planet-gpx-soft-delete.<BASE_DOMAIN>/gps/
-make planet-dump BRANCH=gpx-soft-delete PLANETDUMP=1                 # GPS dump at https://planet-gpx-soft-delete.<BASE_DOMAIN>/gps/
+make up BRANCH=gpx-tracks PLANETDUMP=1                          # also planet-dump-ng, files at https://planet-gpx-tracks.<BASE_DOMAIN>/gps/
+make planet-dump BRANCH=gpx-tracks PLANETDUMP=1                 # GPS dump at https://planet-gpx-tracks.<BASE_DOMAIN>/gps/
 ```
 
 `REPO` is `owner/repo` on GitHub or a full git URL. Needed for the first clone; later it

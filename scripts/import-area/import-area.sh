@@ -4,7 +4,7 @@
 # changeset, like an editor would do.
 #
 # Usage:
-#   TOKEN=<oauth2 token with write_api> scripts/import-area/import-area.sh <target-url> <south,west,north,east>
+#   TOKEN=<oauth2 token with write_api> scripts/import-area/import-area.sh <target-url> <south,west,north,east | file.osm>
 # or, from the osm-dev folder: make import-area BBOX=<south,west,north,east> [SOURCE=ohm TARGET=<url> TOKEN=<token>]
 # Example:
 #   TOKEN=abc SOURCE=ohm scripts/import-area/import-area.sh https://web-events.ohmstaging.org 47.600,-122.335,47.602,-122.332
@@ -14,7 +14,7 @@
 set -euo pipefail
 
 TARGET=${1:?target url, e.g. http://localhost:3000}
-BBOX=${2:?bbox as south,west,north,east}
+BBOX=${2:?bbox as south,west,north,east, or an .osm file}
 TOKEN=${TOKEN:?set TOKEN to an OAuth2 token of the target instance}
 SOURCE=${SOURCE:-osm}
 case "$SOURCE" in
@@ -23,7 +23,7 @@ case "$SOURCE" in
   *) echo "SOURCE must be osm or ohm" >&2; exit 1 ;;
 esac
 OVERPASS=${OVERPASS:-$DEFAULT_OVERPASS}
-COMMENT=${COMMENT:-"Import test data from $SOURCE_NAME ($BBOX)"}
+COMMENT=${COMMENT:-"Import test data from $SOURCE_NAME ($(basename "$BBOX"))"}
 TARGET=${TARGET%/}
 
 # Never write to a production instance
@@ -36,9 +36,14 @@ esac
 WORK=$(mktemp -d)
 trap 'rm -rf "$WORK"' EXIT
 
-echo "==> Downloading $BBOX from $OVERPASS"
-curl -sf -m 300 "$OVERPASS" \
-  --data-urlencode "data=[out:xml][timeout:240];(node($BBOX);way($BBOX););(._;>;);out meta;relation($BBOX);out meta;" -o "$WORK/area.osm"
+if [ -f "$BBOX" ]; then
+  echo "==> Reading $BBOX"
+  cp "$BBOX" "$WORK/area.osm"
+else
+  echo "==> Downloading $BBOX from $OVERPASS"
+  curl -sf -m 300 "$OVERPASS" \
+    --data-urlencode "data=[out:xml][timeout:240];(node($BBOX);way($BBOX););(._;>;);out meta;relation($BBOX);out meta;" -o "$WORK/area.osm"
+fi
 if ! grep -q "<osm" "$WORK/area.osm" || grep -q "runtime error" "$WORK/area.osm"; then
   echo "Overpass did not return data (busy or rate limited). Try again in a minute:" >&2
   head -c 500 "$WORK/area.osm" >&2; exit 1
