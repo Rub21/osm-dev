@@ -19,7 +19,7 @@ else
   SLUG := osmdev
 endif
 
-.PHONY: help setup up down clean logs shell console psql test tokens app apps restore backup proxy-up proxy-down lint planet-dump import-area
+.PHONY: help setup up down clean logs shell console psql test tokens app apps restore backup proxy-up proxy-down lint planet-dump gpx-ids import-area
 
 help: ## Show this help
 	@grep -hE '^[a-zA-Z_-]+:.*## ' $(MAKEFILE_LIST) \
@@ -62,6 +62,9 @@ test: ## Run the Rails tests on openstreetmap_test: make test [ARGS=test/jobs]
 
 planet-dump: ## GPS traces dump with planet-dump-ng: make planet-dump PLANETDUMP=1 [VISIBILITY="identifiable trackable"]
 	$(COMPOSE) run --rm $(if $(VISIBILITY),-e VISIBILITY="$(VISIBILITY)") planetdump bash /docker/planet-dump-ng.sh
+
+gpx-ids: ## List of identifiable GPS trace ids, like chef gpx-ids: make gpx-ids PLANETDUMP=1
+	$(COMPOSE) run --rm planetdump bash /docker/gpx-ids.sh
 
 tokens: ## Print the OAuth tokens as JSON, one per user. REGEN=1 creates new ones
 	@$(if $(REGEN),$(COMPOSE) exec -T web bundle exec rails runner /scripts/generate_token.rb >/dev/null,true)
